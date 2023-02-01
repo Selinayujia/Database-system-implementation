@@ -23,8 +23,8 @@ public class main {
             System.err.println(tree);
 
             // Visit the tree
-            // below needs implementation in the expressiongrammarvisitor class
-            //ExpressionGrammarVisitor visitor = new ExpressionGrammarVisitor();
+            // below needs implementation in the xpathgrammarvisitor class
+            //XPathGrammarVisitor visitor = new XPathGrammarVisitor();
         
             // visitor.visit(tree);
 
