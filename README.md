@@ -1,2 +1,3 @@
-# antlr-tutorial
-Tutorial for antlr
+# XML parser
+
+Grammar file location: XPathGrammar.g4
