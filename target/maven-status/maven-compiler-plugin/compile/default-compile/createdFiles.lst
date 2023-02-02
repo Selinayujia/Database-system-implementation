@@ -1,3 +1,4 @@
+project/parsers/XpathVisitor.class
 project/parsers/XPathGrammarParser$BracketRPContext.class
 project/parsers/XPathGrammarParser$ConstantFilterContext.class
 project/parsers/XPathGrammarParser$AttributeRPContext.class
@@ -27,4 +28,5 @@ project/parsers/XPathGrammarParser$FContext.class
 project/parsers/XPathGrammarParser$RPFilterContext.class
 project/parsers/XPathGrammarParser$SelfRPContext.class
 project/parsers/XPathGrammarParser$AndFilterContext.class
+project/core/visitor/main.class
 project/parsers/XPathGrammarBaseVisitor.class
