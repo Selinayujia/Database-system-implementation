@@ -32,6 +32,17 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         return visit(ctx.rp());
     }
 
+    /*
+    Selina 
+    
+    @Override public List<Node> visitAllChildrenRP(XPathGrammarParser.AllChildrenRPContext ctx) {}
+
+	@Override public List<Node>  visitDoubleSlashRP(XPathGrammarParser.DoubleSlashRPContext ctx) {}
+
+	@Override public List<Node> visitFilteredRP(XPathGrammarParser.FilteredRPContext ctx) {}
+
+	*/
+
     @Override public List<Node> visitTagRP(XPathGrammarParser.TagRPContext ctx) {
         // Find elements nodes with a specific a tag name, e.g persona
         List<Node> elements = new ArrayList<>();
@@ -45,7 +56,44 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         contextNodes = elements;
         return elements;
     }
+    /* 
+
+    // Mingjie
+	@Override public T visitTextRP(XPathGrammarParser.TextRPContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitAttributeRP(XPathGrammarParser.AttributeRPContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitBracketRP(XPathGrammarParser.BracketRPContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitSequenceRP(XPathGrammarParser.SequenceRPContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitParentRP(XPathGrammarParser.ParentRPContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitSelfRP(XPathGrammarParser.SelfRPContext ctx) { return visitChildren(ctx); }
+
+
+    // Together split these later
+
+	@Override public T visitSingleSlashRP(XPathGrammarParser.SingleSlashRPContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitAndFilter(XPathGrammarParser.AndFilterContext ctx) { return visitChildren(ctx); }
+	
+	@Override public T visitIsFilter(XPathGrammarParser.IsFilterContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitBracketFilter(XPathGrammarParser.BracketFilterContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitRPFilter(XPathGrammarParser.RPFilterContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitNotFilter(XPathGrammarParser.NotFilterContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitConstantFilter(XPathGrammarParser.ConstantFilterContext ctx) { return visitChildren(ctx); }
+	
+	@Override public T visitEqualFilter(XPathGrammarParser.EqualFilterContext ctx) { return visitChildren(ctx); }
+
+	@Override public T visitOrFilter(XPathGrammarParser.OrFilterContext ctx) { return visitChildren(ctx); }
     
+    */
+
 
     // helper functions
 
