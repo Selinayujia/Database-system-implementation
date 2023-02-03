@@ -262,8 +262,7 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
     // helper functions
 
     private List<Node> getInitialNodeFromFile(String filename) {
-         // TODO make test path a global?
-        String filepath= "test_files/" + filename;  
+        String filepath= filename;  
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         List<Node> starterNodeList = new ArrayList<>();
     
