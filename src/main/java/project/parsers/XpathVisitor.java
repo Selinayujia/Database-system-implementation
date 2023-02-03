@@ -1,5 +1,6 @@
 package project.parsers;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -29,6 +30,8 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         for(int i = 0; i <  contextNodes.size(); i++){
             descendants.addAll(getNodeDescendants(contextNodes.get(i)));
         }
+        // FIXME 
+        contextNodes = descendants ; 
         return visit(ctx.rp());
     }
 
@@ -43,10 +46,12 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
 	*/
 
+    // FIXME 
     @Override public List<Node> visitTagRP(XPathGrammarParser.TagRPContext ctx) {
         // Find elements nodes with a specific a tag name, e.g persona
         List<Node> elements = new ArrayList<>();
         List<Node> nodes = getAllChildren(contextNodes);
+        System.out.println(nodes.size());
         for (Node node : nodes) {
             // check if the node is an element and compare tag name to element name
             if (node.getNodeType() == Node.ELEMENT_NODE && ctx.TAGNAME().getText().equals(node.getNodeName())) {
@@ -56,22 +61,70 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         contextNodes = elements;
         return elements;
     }
-    /* 
+   
 
     // Mingjie
-	@Override public T visitTextRP(XPathGrammarParser.TextRPContext ctx) { return visitChildren(ctx); }
+	@Override public List<Node> visitTextRP(XPathGrammarParser.TextRPContext ctx) { 
+        List<Node> res = new ArrayList<>();
+        for (Node node : contextNodes) {
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                NodeList childrenNodes = node.getChildNodes();
+                for (int i = 0; i < childrenNodes.getLength(); i++) {
+                    if (childrenNodes.item(i).getNodeType() == Node.TEXT_NODE) {
+                        res.add(childrenNodes.item(i));
+                    }
+                }
+            }
+        }
 
-	@Override public T visitAttributeRP(XPathGrammarParser.AttributeRPContext ctx) { return visitChildren(ctx); }
+        contextNodes = res;
+        return res;
+     }
 
-	@Override public T visitBracketRP(XPathGrammarParser.BracketRPContext ctx) { return visitChildren(ctx); }
+     // FIXME 
+	@Override public List<Node> visitAttributeRP(XPathGrammarParser.AttributeRPContext ctx) { 
+        List<Node> res = new ArrayList<>();
+        String attr = ctx.ATTRNAME().getText().substring(1); //???? 
+        //System.out.println("Attribute Name " + attr);
 
-	@Override public T visitSequenceRP(XPathGrammarParser.SequenceRPContext ctx) { return visitChildren(ctx); }
+        for (Node node : contextNodes) {
+            NamedNodeMap nodemap = node.getAttributes();
+            if (nodemap != null && nodemap.getNamedItem(attr) != null) {
+                res.add(nodemap.getNamedItem(attr));
+            }
+        }
 
-	@Override public T visitParentRP(XPathGrammarParser.ParentRPContext ctx) { return visitChildren(ctx); }
+        contextNodes = res;
+        // FIXME
+        return res;
+        //return visitChildren(ctx);
+         }
 
-	@Override public T visitSelfRP(XPathGrammarParser.SelfRPContext ctx) { return visitChildren(ctx); }
+	@Override public List<Node> visitBracketRP(XPathGrammarParser.BracketRPContext ctx) {
+         return contextNodes; }
 
+	@Override public List<Node> visitSequenceRP(XPathGrammarParser.SequenceRPContext ctx) { 
+        List<Node> res = new ArrayList<>();
+        List<Node> originNodes = new ArrayList<>(contextNodes);
+        res.addAll(visit(ctx.rp(0)));
+        contextNodes = originNodes;
+        res.addAll(visit(ctx.rp(1)));
 
+        contextNodes = res;
+        return res;
+     }
+
+	@Override public List<Node> visitParentRP(XPathGrammarParser.ParentRPContext ctx) { 
+        List<Node> res = getAllParents(contextNodes);
+        contextNodes= res;
+        return res;
+     }
+
+	@Override public List<Node> visitSelfRP(XPathGrammarParser.SelfRPContext ctx) { 
+        return contextNodes; 
+    }
+
+    /* 
     // Together split these later
 
 	@Override public T visitSingleSlashRP(XPathGrammarParser.SingleSlashRPContext ctx) { return visitChildren(ctx); }
@@ -99,7 +152,7 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
     private List<Node> getInitialNodeFromFile(String filename) {
          // TODO make test path a global?
-         String filepath= "test_files/" + filename;  
+        String filepath= "test_files/" + filename;  
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         List<Node> starterNodeList = new ArrayList<>();
     
@@ -133,5 +186,15 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
             descendants.addAll(getNodeDescendants(node.getChildNodes().item(i)));
         }
         return descendants;
+    }
+
+    private List<Node> getAllParents(List<Node> nodes) {
+        List<Node> res = new ArrayList<>();
+
+        for (Node node : nodes) {
+            res.add(node.getParentNode());
+        }
+
+        return res;
     }
 }
