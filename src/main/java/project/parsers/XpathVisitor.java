@@ -30,23 +30,45 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         for(int i = 0; i <  contextNodes.size(); i++){
             descendants.addAll(getNodeDescendants(contextNodes.get(i)));
         }
-        // FIXME 
         contextNodes = descendants ; 
         return visit(ctx.rp());
     }
 
-    /*
-    Selina 
     
-    @Override public List<Node> visitAllChildrenRP(XPathGrammarParser.AllChildrenRPContext ctx) {}
+    @Override public List<Node> visitAllChildrenRP(XPathGrammarParser.AllChildrenRPContext ctx) {
+        List<Node> nodes = getAllChildren(contextNodes);
+        contextNodes = nodes;
+        return nodes;
+    }
 
-	@Override public List<Node>  visitDoubleSlashRP(XPathGrammarParser.DoubleSlashRPContext ctx) {}
+	@Override public List<Node>  visitDoubleSlashRP(XPathGrammarParser.DoubleSlashRPContext ctx) {
+        visit(ctx.rp(0));
+        visit(ctx.rp(1));
+        List<Node> nodes = new ArrayList<>(new HashSet<>(contextNodes));
+        contextNodes = nodes;
+        return nodes;
+    }
 
-	@Override public List<Node> visitFilteredRP(XPathGrammarParser.FilteredRPContext ctx) {}
+	@Override public List<Node> visitFilteredRP(XPathGrammarParser.FilteredRPContext ctx) {
+        visit(ctx.rp());
 
-	*/
 
-    // FIXME 
+        List<Node> nodes = new ArrayList<>();
+        List<Node> nodeToEvaluate = new ArrayList<>(contextNodes);
+
+        for (Node node : nodeToEvaluate) {
+            contextNodes.clear();
+            contextNodes.add(node);
+            if (visit(ctx.f()).size() != 0) {
+                nodes.add(node);
+            }
+        }
+        contextNodes = nodes;
+        return nodes;
+    }
+
+
+    // Ask TA
     @Override public List<Node> visitTagRP(XPathGrammarParser.TagRPContext ctx) {
         // Find elements nodes with a specific a tag name, e.g persona
         List<Node> elements = new ArrayList<>();
