@@ -28,9 +28,10 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
         List<Node> descendants = new ArrayList<>();
         for(int i = 0; i <  contextNodes.size(); i++){
+            //FIXME(1) dedup??? no 
             descendants.addAll(getNodeDescendants(contextNodes.get(i)));
         }
-        // FIXME 
+         
         contextNodes = descendants ; 
         return visit(ctx.rp());
     }
@@ -46,7 +47,7 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
 	*/
 
-    // FIXME 
+    // FIXME  (2) getAllChildren ? 
     @Override public List<Node> visitTagRP(XPathGrammarParser.TagRPContext ctx) {
         // Find elements nodes with a specific a tag name, e.g persona
         List<Node> elements = new ArrayList<>();
@@ -58,6 +59,7 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
                 elements.add(node);
             }
         }
+      
         contextNodes = elements;
         return elements;
     }
@@ -81,10 +83,10 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         return res;
      }
 
-     // FIXME 
+      
 	@Override public List<Node> visitAttributeRP(XPathGrammarParser.AttributeRPContext ctx) { 
         List<Node> res = new ArrayList<>();
-        String attr = ctx.ATTRNAME().getText().substring(1); //???? 
+        String attr = ctx.ATTRNAME().getText().substring(1) ; // @AttributeName
         //System.out.println("Attribute Name " + attr);
 
         for (Node node : contextNodes) {
@@ -93,12 +95,12 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
                 res.add(nodemap.getNamedItem(attr));
             }
         }
-
-        contextNodes = res;
-        // FIXME
+        contextNodes =  res ; 
         return res;
-        //return visitChildren(ctx);
-         }
+
+        // FIXME(3)  return visitChildren(ctx); ??
+    
+    }
 
 	@Override public List<Node> visitBracketRP(XPathGrammarParser.BracketRPContext ctx) {
          return contextNodes; }
@@ -124,28 +126,115 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         return contextNodes; 
     }
 
-    /* 
-    // Together split these later
+    @Override public List<Node> visitSingleSlashRP(XPathGrammarParser.SingleSlashRPContext ctx) { 
+        visit(ctx.rp(0));
+        visit(ctx.rp(1));
+        //dedup
+        List<Node> res = new ArrayList<>(new HashSet<>(contextNodes));  
+        contextNodes = res;
+        return res;
+    }
 
-	@Override public T visitSingleSlashRP(XPathGrammarParser.SingleSlashRPContext ctx) { return visitChildren(ctx); }
+    // Below are methods for filters
+    // FIXME 4:  there is no need to update contextNode in the filter method, only return size matters 
+    @Override public List<Node> visitAndFilter(XPathGrammarParser.AndFilterContext ctx) { 
 
-	@Override public T visitAndFilter(XPathGrammarParser.AndFilterContext ctx) { return visitChildren(ctx); }
-	
-	@Override public T visitIsFilter(XPathGrammarParser.IsFilterContext ctx) { return visitChildren(ctx); }
+        List<Node> origiNodes = new ArrayList<>(contextNodes);
+        List<Node> filter1 = visit(ctx.f(0)) ;
+        contextNodes = origiNodes;
+        List<Node> filter2 = visit(ctx.f(1));
+        
+        if (filter1.size() != 0 && filter2.size() != 0) {
+            return filter1 ; 
+        }
+        return new ArrayList<>() ; 
+         
+     }
 
-	@Override public T visitBracketFilter(XPathGrammarParser.BracketFilterContext ctx) { return visitChildren(ctx); }
+     @Override public List<Node> visitOrFilter(XPathGrammarParser.OrFilterContext ctx) { 
+        List<Node> res = new ArrayList<>() ; 
+        List<Node> origiNodes = new ArrayList<>(contextNodes);
+        res.addAll(visit(ctx.f(0))) ; 
+        contextNodes = origiNodes;
+        res.addAll(visit(ctx.f(1))) ; 
+        // dedup
+        res =  new ArrayList<>(
+            new HashSet<>(res));;
+        return res;
+      }
 
-	@Override public T visitRPFilter(XPathGrammarParser.RPFilterContext ctx) { return visitChildren(ctx); }
 
-	@Override public T visitNotFilter(XPathGrammarParser.NotFilterContext ctx) { return visitChildren(ctx); }
+    @Override public List<Node> visitBracketFilter(XPathGrammarParser.BracketFilterContext ctx) {
+        return visit(ctx.f());
+    }
 
-	@Override public T visitConstantFilter(XPathGrammarParser.ConstantFilterContext ctx) { return visitChildren(ctx); }
-	
-	@Override public T visitEqualFilter(XPathGrammarParser.EqualFilterContext ctx) { return visitChildren(ctx); }
+    @Override public List<Node> visitIsFilter(XPathGrammarParser.IsFilterContext ctx) { 
+        
+        List<Node> origiNodes = new ArrayList<>( contextNodes);
+        List<Node> rp1 = visit(ctx.rp(0));
+        contextNodes = origiNodes;
+        List<Node> rp2 = visit(ctx.rp(1));
 
-	@Override public T visitOrFilter(XPathGrammarParser.OrFilterContext ctx) { return visitChildren(ctx); }
-    
-    */
+        List<Node> res = new ArrayList<>();
+        for (Node currNode1 : rp1) {
+            for (Node currNode2 : rp2) {
+                if (currNode1.isSameNode(currNode2)) {
+                    res.add(currNode1);
+                }
+            }
+        }
+        return res; 
+         
+    }
+    @Override public List<Node> visitEqualFilter(XPathGrammarParser.EqualFilterContext ctx) {  
+         
+        List<Node> origiNodes = new ArrayList<>( contextNodes);
+        List<Node> rp1 = visit(ctx.rp(0));
+        contextNodes = origiNodes;
+        List<Node> rp2 = visit(ctx.rp(1));
+
+        List<Node> res = new ArrayList<>();
+        for (Node currNode1 : rp1) {
+            for (Node currNode2 : rp2) {
+                if (currNode1.isEqualNode(currNode2)) {
+                    res.add(currNode1);
+                }
+            }
+        }
+        return res; 
+
+    }
+    @Override public List<Node> visitRPFilter(XPathGrammarParser.RPFilterContext ctx) { 
+        return visit(ctx.rp());
+     }
+
+     
+	@Override public List<Node> visitNotFilter(XPathGrammarParser.NotFilterContext ctx) { 
+        List<Node> nonEmptyList = new ArrayList<>( contextNodes);
+        List<Node> filterRes = visit(ctx.f()); 
+       
+        if (filterRes.size() == 0) {
+            return nonEmptyList;   
+        }
+        return new ArrayList<>();
+        
+     }
+
+	@Override public List<Node> visitConstantFilter(XPathGrammarParser.ConstantFilterContext ctx) {  
+        
+        visit(ctx.rp());
+        String str  = ctx.STRINGCONSTANT().getText(); 
+        str  = str.substring(1, str.length() - 1);  // "REAL TEXT"
+        
+        List<Node> res = new ArrayList<>();
+        for (Node node : contextNodes) {
+            if (node.getNodeType() == Node.TEXT_NODE && node.getNodeValue().equals(str)) {
+                res.add(node);
+            }
+        }
+        contextNodes = res;
+        return res;
+    } 
 
 
     // helper functions
@@ -197,4 +286,6 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
         return res;
     }
+
+     
 }
