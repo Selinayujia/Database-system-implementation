@@ -129,7 +129,7 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
     @Override public List<Node> visitSingleSlashRP(XPathGrammarParser.SingleSlashRPContext ctx) { 
         visit(ctx.rp(0));
         visit(ctx.rp(1));
-        //dedup
+        //dedup: https://www.baeldung.com/java-remove-duplicates-from-list
         List<Node> res = new ArrayList<>(new HashSet<>(contextNodes));  
         contextNodes = res;
         return res;
