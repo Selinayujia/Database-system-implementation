@@ -43,12 +43,42 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         return nodes;
     }
 
+    //FIXME   
 	@Override public List<Node>  visitDoubleSlashRP(XPathGrammarParser.DoubleSlashRPContext ctx) {
+        /* 
         visit(ctx.rp(0));
         visit(ctx.rp(1));
         List<Node> nodes = new ArrayList<>(new HashSet<>(contextNodes));
         contextNodes = nodes;
-        return nodes;
+        return nodes; */ 
+        
+        //rp1 
+        visit(ctx.rp(0));
+        List<Node> selfAndDescendants = new ArrayList<>();
+        for(int i = 0; i < contextNodes.size(); i++){
+            selfAndDescendants.addAll(getNodeDescendants(contextNodes.get(i)));
+        }
+        //dedup
+        contextNodes = deduplicate(selfAndDescendants) ; 
+        //rp2
+        visit(ctx.rp(1));
+        return contextNodes ; 
+        
+        /* 
+        visit(ctx.rp(0));
+        List<Node> selfAndDescendants = new ArrayList<>();
+        for(int i = 0; i < contextNodes.size(); i++){
+            selfAndDescendants.addAll(getNodeDescendants(contextNodes.get(i)));
+        }
+        contextNodes =  selfAndDescendants ; 
+        List<Node> tmp = new ArrayList<>(contextNodes );
+        List<Node> res = new ArrayList<>() ; 
+        res.addAll(tmp) ; 
+        res.addAll( visit(ctx.rp(1))) ; 
+        res = deduplicate(res) ; 
+        contextNodes = res;
+        return res; */
+        
     }
 
 	@Override public List<Node> visitFilteredRP(XPathGrammarParser.FilteredRPContext ctx) {
@@ -125,7 +155,8 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
     }
 
 	@Override public List<Node> visitBracketRP(XPathGrammarParser.BracketRPContext ctx) {
-         return contextNodes; }
+        return visit(ctx.rp());
+    }
 
 	@Override public List<Node> visitSequenceRP(XPathGrammarParser.SequenceRPContext ctx) { 
         List<Node> res = new ArrayList<>();
@@ -151,10 +182,8 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
     @Override public List<Node> visitSingleSlashRP(XPathGrammarParser.SingleSlashRPContext ctx) { 
         visit(ctx.rp(0));
         visit(ctx.rp(1));
-        //dedup: https://www.baeldung.com/java-remove-duplicates-from-list
-        List<Node> res = new ArrayList<>(new HashSet<>(contextNodes));  
-        contextNodes = res;
-        return res;
+        contextNodes  = deduplicate(contextNodes) ; 
+        return contextNodes ;
     }
 
     // Below are methods for filters
@@ -180,8 +209,7 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         contextNodes = origiNodes;
         res.addAll(visit(ctx.f(1))) ; 
         // dedup
-        res =  new ArrayList<>(
-            new HashSet<>(res));;
+        res =  deduplicate(res) ; 
         return res;
       }
 
@@ -307,6 +335,25 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
         return res;
     }
+
+    //order matters, cannot use hashset for deduplication 
+    private List<Node> deduplicate(List<Node> input) {     
+        List<Node> result = new ArrayList<>();
+        for (Node curNode : input) {  
+            boolean dup = false  ;    
+            for (Node node : result) {
+                if (curNode.isSameNode(node)) {
+                    dup = true ; 
+                    break ; 
+                }
+            }
+            if (!dup) {
+                result.add(curNode);
+            }
+        }
+        return result;
+      }
+
 
      
 }
