@@ -31,21 +31,43 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
             //FIXME(1) dedup??? no 
             descendants.addAll(getNodeDescendants(contextNodes.get(i)));
         }
-         
+
         contextNodes = descendants ; 
         return visit(ctx.rp());
     }
 
-    /*
-    Selina 
     
-    @Override public List<Node> visitAllChildrenRP(XPathGrammarParser.AllChildrenRPContext ctx) {}
+    @Override public List<Node> visitAllChildrenRP(XPathGrammarParser.AllChildrenRPContext ctx) {
+        List<Node> nodes = getAllChildren(contextNodes);
+        contextNodes = nodes;
+        return nodes;
+    }
 
-	@Override public List<Node>  visitDoubleSlashRP(XPathGrammarParser.DoubleSlashRPContext ctx) {}
+	@Override public List<Node>  visitDoubleSlashRP(XPathGrammarParser.DoubleSlashRPContext ctx) {
+        visit(ctx.rp(0));
+        visit(ctx.rp(1));
+        List<Node> nodes = new ArrayList<>(new HashSet<>(contextNodes));
+        contextNodes = nodes;
+        return nodes;
+    }
 
-	@Override public List<Node> visitFilteredRP(XPathGrammarParser.FilteredRPContext ctx) {}
+	@Override public List<Node> visitFilteredRP(XPathGrammarParser.FilteredRPContext ctx) {
+        visit(ctx.rp());
+        List<Node> nodes = new ArrayList<>();
+        List<Node> nodeToEvaluate = new ArrayList<>(contextNodes);
 
-	*/
+        for (Node node : nodeToEvaluate) {
+            contextNodes.clear();
+            contextNodes.add(node);
+            if (visit(ctx.f()).size() != 0) {
+                nodes.add(node);
+            }
+        }
+        contextNodes = nodes;
+        return nodes;
+    }
+
+
 
     // FIXME  (2) getAllChildren ? 
     @Override public List<Node> visitTagRP(XPathGrammarParser.TagRPContext ctx) {
@@ -240,8 +262,7 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
     // helper functions
 
     private List<Node> getInitialNodeFromFile(String filename) {
-         // TODO make test path a global?
-        String filepath= "test_files/" + filename;  
+        String filepath= filename;  
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         List<Node> starterNodeList = new ArrayList<>();
     
