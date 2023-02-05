@@ -25,8 +25,8 @@ public class main {
     public static void main(String[] args) {
         try {
             // Generate tree and visitor
-            CharStream query = CharStreams.fromFileName("query.txt");
-            // CharStream query = CharStreams.fromFileName(args[0]);
+            //CharStream query = CharStreams.fromFileName("query.txt");
+            CharStream query = CharStreams.fromFileName(args[0]);
             XPathGrammarLexer lexer = new XPathGrammarLexer(query);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             XPathGrammarParser parser = new XPathGrammarParser(tokens);
@@ -54,8 +54,8 @@ public class main {
             DOMSource xml_content = new DOMSource(doc);
 
 
-            StreamResult file = new StreamResult(new File("./output.xml"));
-            // StreamResult file = new StreamResult(new File(args[0]));
+            //StreamResult file = new StreamResult(new File("./output.xml"));
+            StreamResult file = new StreamResult(new File(args[1]));
             Transformer tf = TransformerFactory.newInstance().newTransformer();
             tf.transform(xml_content, file);
             
