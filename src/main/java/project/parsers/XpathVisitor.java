@@ -28,7 +28,6 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
         List<Node> descendants = new ArrayList<>();
         for(int i = 0; i <  contextNodes.size(); i++){
-            //FIXME(1) dedup??? no 
             descendants.addAll(getNodeDescendants(contextNodes.get(i)));
         }
 
@@ -45,12 +44,6 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
 
      
 	@Override public List<Node>  visitDoubleSlashRP(XPathGrammarParser.DoubleSlashRPContext ctx) {
-        /* 
-        visit(ctx.rp(0));
-        visit(ctx.rp(1));
-        List<Node> nodes = new ArrayList<>(new HashSet<>(contextNodes));
-        contextNodes = nodes;
-        return nodes; */ 
         
         //rp1 
         visit(ctx.rp(0));
@@ -118,11 +111,9 @@ public class XpathVisitor extends XPathGrammarBaseVisitor<List<Node>>{
         return res;
      }
 
-    //FIXME2 
 	@Override public List<Node> visitAttributeRP(XPathGrammarParser.AttributeRPContext ctx) { 
         List<Node> res = new ArrayList<>();
         String attr = ctx.ATTRNAME().getText().substring(1) ; // @AttributeName
-        //System.out.println("Attribute Name " + attr);
 
         for (Node node : contextNodes) {
             NamedNodeMap nodemap = node.getAttributes();
