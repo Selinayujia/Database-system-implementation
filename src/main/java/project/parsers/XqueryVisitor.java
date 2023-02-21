@@ -18,26 +18,9 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
     }
 
 
-     // helper funcs
-     // order matters, cannot use hashset for deduplication 
-     private List<Node> deduplicate(List<Node> input) {     
-        List<Node> result = new ArrayList<>();
-        for (Node curNode : input) {  
-            boolean dup = false  ;    
-            for (Node node : result) {
-                if (curNode.isSameNode(node)) {
-                    dup = true ; 
-                    break ; 
-                }
-            }
-            if (!dup) {
-                result.add(curNode);
-            }
-        }
-        return result;
-      }
 
-    /*
+
+/*
     T visitStringXQ(XQueryGrammarParser.StringXQContext ctx); [Done]
     
     T visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx); [DONE]
@@ -124,4 +107,31 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
 	T visitOrFilter(XQueryGrammarParser.OrFilterContext ctx);
     */
+
+
+
+
+
+
+
+     // helper funcs
+     // order matters, cannot use hashset for deduplication 
+     private List<Node> deduplicate(List<Node> input) {     
+        List<Node> result = new ArrayList<>();
+        for (Node curNode : input) {  
+            boolean dup = false  ;    
+            for (Node node : result) {
+                if (curNode.isSameNode(node)) {
+                    dup = true ; 
+                    break ; 
+                }
+            }
+            if (!dup) {
+                result.add(curNode);
+            }
+        }
+        return result;
+      }
+
+    
 }
