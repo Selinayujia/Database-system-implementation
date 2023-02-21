@@ -2,8 +2,39 @@ package project.parsers;
 import java.util.*;
 import org.w3c.dom.*;
 public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
+
+    private List<Node> contextNodes = new ArrayList<>();
+
+    @Override public List<Node> visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx) {
+        visit(ctx.xq());
+        visit(ctx.rp());
+        contextNodes = deduplicate(contextNodes);
+
+        return contextNodes;
+    }
+    
+
+     // helper funcs
+     // order matters, cannot use hashset for deduplication 
+     private List<Node> deduplicate(List<Node> input) {     
+        List<Node> result = new ArrayList<>();
+        for (Node curNode : input) {  
+            boolean dup = false  ;    
+            for (Node node : result) {
+                if (curNode.isSameNode(node)) {
+                    dup = true ; 
+                    break ; 
+                }
+            }
+            if (!dup) {
+                result.add(curNode);
+            }
+        }
+        return result;
+      }
+
     /*
-    T visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx);
+    T visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx); [DONE]
 	
 	T visitApXQ(XQueryGrammarParser.ApXQContext ctx);
 	
