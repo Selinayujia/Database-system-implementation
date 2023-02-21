@@ -5,6 +5,10 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
     private List<Node> contextNodes = new ArrayList<>();
 
+    @Override public List<Node> visitStringXQ(XQueryGrammarParser.StringXQContext ctx) {
+        return contextNodes;
+    }
+
     @Override public List<Node> visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx) {
         visit(ctx.xq());
         visit(ctx.rp());
@@ -12,7 +16,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
         return contextNodes;
     }
-    
+
 
      // helper funcs
      // order matters, cannot use hashset for deduplication 
@@ -34,6 +38,8 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
       }
 
     /*
+    T visitStringXQ(XQueryGrammarParser.StringXQContext ctx); [Done]
+    
     T visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx); [DONE]
 	
 	T visitApXQ(XQueryGrammarParser.ApXQContext ctx);
