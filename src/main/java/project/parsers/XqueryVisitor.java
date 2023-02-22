@@ -16,7 +16,10 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
         return contextNodes;
     }
-
+    @Override public List<Node> visitApXQ(XQueryGrammarParser.ApXQContext ctx) {
+		visit(ctx.ap());
+        return contextNodes;
+    }
 
 
 
