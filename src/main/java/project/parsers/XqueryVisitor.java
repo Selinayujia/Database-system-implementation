@@ -4,7 +4,7 @@ import org.w3c.dom.*;
 public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
     private List<Node> contextNodes = new ArrayList<>();
-
+	private HashMap<String, List<Node>> varMap = new HashMap<>();
     @Override public List<Node> visitStringXQ(XQueryGrammarParser.StringXQContext ctx) {
         return contextNodes;
     }
@@ -20,21 +20,45 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 		visit(ctx.ap());
         return contextNodes;
     }
+	@Override public List<Node> visitVarXQ(XQueryGrammarParser.VarXQContext ctx){
+		String content = ctx.VAR().getText();
+        if (varMap.containsKey(content)){
+            contextNodes = varMap.get(content);
+        }
+        else {
+            contextNodes = new ArrayList<>();
+        }
 
-
-
+		return contextNodes;
+	}
+	@Override public List<Node> visitSequenceXQ(XQueryGrammarParser.SequenceXQContext ctx){
+		List<Node> temp =  new ArrayList<>(contextNodes);
+		List<Node> res = new ArrayList<>();
+		res.addAll(visit(ctx.xq(0)));
+		contextNodes = temp;
+		res.addAll(visit(ctx.xq(1)));
+		contextNodes = res;
+		return contextNodes;
+	}
+	@Override public List<Node> visitBracketXQ(XQueryGrammarParser.BracketXQContext ctx){
+		return visit(ctx.xq());
+	}
 /*
     T visitStringXQ(XQueryGrammarParser.StringXQContext ctx); [Done]
     
     T visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx); [DONE]
 	
-	T visitApXQ(XQueryGrammarParser.ApXQContext ctx);
+	T visitApXQ(XQueryGrammarParser.ApXQContext ctx); [Done]
 	
-	T visitVarXQ(XQueryGrammarParser.VarXQContext ctx);
+	T visitVarXQ(XQueryGrammarParser.VarXQContext ctx);[Done]
 	
-	T visitSequenceXQ(XQueryGrammarParser.SequenceXQContext ctx);
+	T visitSequenceXQ(XQueryGrammarParser.SequenceXQContext ctx);[Done]
 	
-	T visitBracketXQ(XQueryGrammarParser.BracketXQContext ctx);
+	T visitBracketXQ(XQueryGrammarParser.BracketXQContext ctx);[Done]
+
+
+
+
 	
 	T visitFlworXQ(XQueryGrammarParser.FlworXQContext ctx);
 	
