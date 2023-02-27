@@ -150,14 +150,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 	T visitWhereClause(XQueryGrammarParser.WhereClauseContext ctx);
 
 	T visitReturnClause(XQueryGrammarParser.ReturnClauseContext ctx);
-
-
-
-
-
-
-
-	// Mingejie Song
+	
 	T visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx);
 	
 	T visitOrCond(XQueryGrammarParser.OrCondContext ctx);
@@ -173,6 +166,10 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 	T visitBracketCond(XQueryGrammarParser.BracketCondContext ctx);
 
 	T visitIsCond(XQueryGrammarParser.IsCondContext ctx);
+
+
+// Mingejie Song
+
 
 	T visitSingleSlashAP(XQueryGrammarParser.SingleSlashAPContext ctx);
 
