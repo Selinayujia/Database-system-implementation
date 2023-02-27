@@ -218,106 +218,250 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
         return res;
     }
 
+	// old methods from xpath -> xquery
 
-/*
-    T visitStringXQ(XQueryGrammarParser.StringXQContext ctx); [Done]
+	@Override public List<Node> visitSingleSlashAP(XQueryGrammarParser.SingleSlashAPContext ctx) {
+        // a single slash simply just direct the next part of relative path
+        String fName = ctx.FILENAME().getText();
+        contextNodes = getInitialNodeFromFile(fName);
+        // go to the next relative path of the query
+        return visit(ctx.rp());
+    }
+
+    @Override public List<Node> visitDoubleSlashAP(XQueryGrammarParser.DoubleSlashAPContext ctx) {
+        // a double slash recursively find all the descendant nodes of the current node
+        String fName = ctx.FILENAME().getText();
+        contextNodes = getInitialNodeFromFile(fName);
+
+        List<Node> descendants = new ArrayList<>();
+        for(int i = 0; i <  contextNodes.size(); i++){
+            descendants.addAll(getNodeDescendants(contextNodes.get(i)));
+        }
+
+        contextNodes = descendants ; 
+        return visit(ctx.rp());
+    }
+
     
-    T visitSingleSlashXQ(XQueryGrammarParser.SingleSlashXQContext ctx); [DONE]
-	
-	T visitApXQ(XQueryGrammarParser.ApXQContext ctx); [Done]
-	
-	T visitVarXQ(XQueryGrammarParser.VarXQContext ctx);[Done]
-	
-	T visitSequenceXQ(XQueryGrammarParser.SequenceXQContext ctx);[Done]
-	
-	T visitBracketXQ(XQueryGrammarParser.BracketXQContext ctx);[Done]
-	
-	T visitFlworXQ(XQueryGrammarParser.FlworXQContext ctx);[Done]
-	
-	T visitTagXQ(XQueryGrammarParser.TagXQContext ctx);[Done]
+    @Override public List<Node> visitAllChildrenRP(XQueryGrammarParser.AllChildrenRPContext ctx) {
+        List<Node> nodes = getAllChildren(contextNodes);
+        contextNodes = nodes;
+        return nodes;
+    }
 
-	T visitLetClauseXQ(XQueryGrammarParser.LetClauseXQContext ctx);[Done]
+     
+	@Override public List<Node>  visitDoubleSlashRP(XQueryGrammarParser.DoubleSlashRPContext ctx) {
+        
+        //rp1 
+        visit(ctx.rp(0));
+        List<Node> selfAndDescendants = new ArrayList<>();
+        for(int i = 0; i < contextNodes.size(); i++){
+            selfAndDescendants.addAll(getNodeDescendants(contextNodes.get(i)));
+        }
+        //dedup
+        contextNodes = deduplicate(selfAndDescendants) ; 
+        //rp2
+        visit(ctx.rp(1));
+        return contextNodes ; 
+    }
 
-	T visitDoubleSlashXQ(XQueryGrammarParser.DoubleSlashXQContext ctx);[Done]
+	@Override public List<Node> visitFilteredRP(XQueryGrammarParser.FilteredRPContext ctx) {
+        visit(ctx.rp());
+        List<Node> nodes = new ArrayList<>();
+        List<Node> nodeToEvaluate = new ArrayList<>(contextNodes);
 
-	T visitForClause(XQueryGrammarParser.ForClauseContext ctx);[Done]
-
-	T visitLetClause(XQueryGrammarParser.LetClauseContext ctx);[Done]
-
-	T visitWhereClause(XQueryGrammarParser.WhereClauseContext ctx);[Done]
-
-	T visitReturnClause(XQueryGrammarParser.ReturnClauseContext ctx);[Done]
-	
-	T visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx);[Done]
-	
-	T visitOrCond(XQueryGrammarParser.OrCondContext ctx);[Done]
-
-	T visitEqualCond(XQueryGrammarParser.EqualCondContext ctx);[Done]
-
-	T visitAndCond(XQueryGrammarParser.AndCondContext ctx);[Done]
-
-	T visitNotCond(XQueryGrammarParser.NotCondContext ctx); [Done]
-
-	T visitEmptyCond(XQueryGrammarParser.EmptyCondContext ctx);[Done]
-
-	T visitBracketCond(XQueryGrammarParser.BracketCondContext ctx);[Done]
-
-	T visitIsCond(XQueryGrammarParser.IsCondContext ctx);[Done]
-
-
-// Mingejie Song
-
-
-	T visitSingleSlashAP(XQueryGrammarParser.SingleSlashAPContext ctx);
-
-	T visitDoubleSlashAP(XQueryGrammarParser.DoubleSlashAPContext ctx);
-
-	T visitAllChildrenRP(XQueryGrammarParser.AllChildrenRPContext ctx);
-
-	T visitDoubleSlashRP(XQueryGrammarParser.DoubleSlashRPContext ctx);
-
-	T visitFilteredRP(XQueryGrammarParser.FilteredRPContext ctx);
-
-	T visitTagRP(XQueryGrammarParser.TagRPContext ctx);
-
-	T visitTextRP(XQueryGrammarParser.TextRPContext ctx);
-
-	T visitAttributeRP(XQueryGrammarParser.AttributeRPContext ctx);
-
-	T visitBracketRP(XQueryGrammarParser.BracketRPContext ctx);
-
-	T visitSequenceRP(XQueryGrammarParser.SequenceRPContext ctx);
-
-	T visitParentRP(XQueryGrammarParser.ParentRPContext ctx);
-
-	T visitSelfRP(XQueryGrammarParser.SelfRPContext ctx);
-
-	T visitSingleSlashRP(XQueryGrammarParser.SingleSlashRPContext ctx);
-
-	// Selina Zhang
-
-	T visitAndFilter(XQueryGrammarParser.AndFilterContext ctx);
-
-	T visitIsFilter(XQueryGrammarParser.IsFilterContext ctx);
-
-	T visitBracketFilter(XQueryGrammarParser.BracketFilterContext ctx);
-
-	T visitRPFilter(XQueryGrammarParser.RPFilterContext ctx);
-
-	T visitNotFilter(XQueryGrammarParser.NotFilterContext ctx);
-
-	T visitConstantFilter(XQueryGrammarParser.ConstantFilterContext ctx);
-
-	T visitEqualFilter(XQueryGrammarParser.EqualFilterContext ctx);
-
-	T visitOrFilter(XQueryGrammarParser.OrFilterContext ctx);
-    */
+        for (Node node : nodeToEvaluate) {
+            contextNodes.clear();
+            contextNodes.add(node);
+            if (visit(ctx.f()).size() != 0) {
+                nodes.add(node);
+            }
+        }
+        contextNodes = nodes;
+        return nodes;
+    }
 
 
 
+    @Override public List<Node> visitTagRP(XQueryGrammarParser.TagRPContext ctx) {
+        // Find elements nodes with a specific a tag name, e.g persona
+        List<Node> elements = new ArrayList<>();
+        List<Node> nodes = getAllChildren(contextNodes);
+        for (Node node : nodes) {
+            // check if the node is an element and compare tag name to element name
+            if (node.getNodeType() == Node.ELEMENT_NODE && ctx.TAGNAME().getText().equals(node.getNodeName())) {
+                elements.add(node);
+            }
+        }
+      
+        contextNodes = elements;
+        return elements;
+    }
+   
+
+	@Override public List<Node> visitTextRP(XQueryGrammarParser.TextRPContext ctx) { 
+        List<Node> res = new ArrayList<>();
+        for (Node node : contextNodes) {
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                NodeList childrenNodes = node.getChildNodes();
+                for (int i = 0; i < childrenNodes.getLength(); i++) {
+                    if (childrenNodes.item(i).getNodeType() == Node.TEXT_NODE) {
+                        res.add(childrenNodes.item(i));
+                    }
+                }
+            }
+        }
+
+        contextNodes = res;
+        return res;
+     }
+
+	@Override public List<Node> visitAttributeRP(XQueryGrammarParser.AttributeRPContext ctx) { 
+        List<Node> res = new ArrayList<>();
+        String attr = ctx.ATTRNAME().getText().substring(1) ; // @AttributeName
+
+        for (Node node : contextNodes) {
+            NamedNodeMap nodemap = node.getAttributes();
+            if (nodemap != null && nodemap.getNamedItem(attr) != null) {
+                res.add(nodemap.getNamedItem(attr));
+            }
+        }
+        contextNodes =  res ; 
+        return res;
+
+    }
+
+	@Override public List<Node> visitBracketRP(XQueryGrammarParser.BracketRPContext ctx) {
+        return visit(ctx.rp());
+    }
+
+	@Override public List<Node> visitSequenceRP(XQueryGrammarParser.SequenceRPContext ctx) { 
+        List<Node> res = new ArrayList<>();
+        List<Node> originNodes = new ArrayList<>(contextNodes);
+        res.addAll(visit(ctx.rp(0)));
+        contextNodes = originNodes;
+        res.addAll(visit(ctx.rp(1)));
+
+        contextNodes = res;
+        return res;
+     }
+
+	@Override public List<Node> visitParentRP(XQueryGrammarParser.ParentRPContext ctx) { 
+        List<Node> res = getAllParents(contextNodes);
+        contextNodes= res;
+        return res;
+     }
+
+	@Override public List<Node> visitSelfRP(XQueryGrammarParser.SelfRPContext ctx) { 
+        return contextNodes; 
+    }
+
+    @Override public List<Node> visitSingleSlashRP(XQueryGrammarParser.SingleSlashRPContext ctx) { 
+        visit(ctx.rp(0));
+        visit(ctx.rp(1));
+        contextNodes  = deduplicate(contextNodes) ; 
+        return contextNodes ;
+    }
+
+    // Below are methods for filters
+    // there is no need to update contextNode in the filter method, only return size matters 
+    @Override public List<Node> visitAndFilter(XQueryGrammarParser.AndFilterContext ctx) { 
+
+        List<Node> origiNodes = new ArrayList<>(contextNodes);
+        List<Node> filter1 = visit(ctx.f(0)) ;
+        contextNodes = origiNodes;
+        List<Node> filter2 = visit(ctx.f(1));
+        
+        if (filter1.size() != 0 && filter2.size() != 0) {
+            return filter1 ; 
+        }
+        return new ArrayList<>() ; 
+         
+     }
+
+     @Override public List<Node> visitOrFilter(XQueryGrammarParser.OrFilterContext ctx) { 
+        List<Node> res = new ArrayList<>() ; 
+        List<Node> origiNodes = new ArrayList<>(contextNodes);
+        res.addAll(visit(ctx.f(0))) ; 
+        contextNodes = origiNodes;
+        res.addAll(visit(ctx.f(1))) ; 
+        // dedup
+        res =  deduplicate(res) ; 
+        return res;
+      }
 
 
+    @Override public List<Node> visitBracketFilter(XQueryGrammarParser.BracketFilterContext ctx) {
+        return visit(ctx.f());
+    }
 
+    @Override public List<Node> visitIsFilter(XQueryGrammarParser.IsFilterContext ctx) { 
+        
+        List<Node> origiNodes = new ArrayList<>( contextNodes);
+        List<Node> rp1 = visit(ctx.rp(0));
+        contextNodes = origiNodes;
+        List<Node> rp2 = visit(ctx.rp(1));
+
+        List<Node> res = new ArrayList<>();
+        for (Node currNode1 : rp1) {
+            for (Node currNode2 : rp2) {
+                if (currNode1.isSameNode(currNode2)) {
+                    res.add(currNode1);
+                }
+            }
+        }
+        return res; 
+         
+    }
+    @Override public List<Node> visitEqualFilter(XQueryGrammarParser.EqualFilterContext ctx) {  
+         
+        List<Node> origiNodes = new ArrayList<>( contextNodes);
+        List<Node> rp1 = visit(ctx.rp(0));
+        contextNodes = origiNodes;
+        List<Node> rp2 = visit(ctx.rp(1));
+
+        List<Node> res = new ArrayList<>();
+        for (Node currNode1 : rp1) {
+            for (Node currNode2 : rp2) {
+                if (currNode1.isEqualNode(currNode2)) {
+                    res.add(currNode1);
+                }
+            }
+        }
+        return res; 
+
+    }
+    @Override public List<Node> visitRPFilter(XQueryGrammarParser.RPFilterContext ctx) { 
+        return visit(ctx.rp());
+     }
+
+     
+	@Override public List<Node> visitNotFilter(XQueryGrammarParser.NotFilterContext ctx) { 
+        List<Node> nonEmptyList = new ArrayList<>( contextNodes);
+        List<Node> filterRes = visit(ctx.f()); 
+       
+        if (filterRes.size() == 0) {
+            return nonEmptyList;   
+        }
+        return new ArrayList<>();
+        
+     }
+
+	@Override public List<Node> visitConstantFilter(XQueryGrammarParser.ConstantFilterContext ctx) {  
+        
+        visit(ctx.rp());
+        String str  = ctx.STRINGCONSTANT().getText(); 
+        str  = str.substring(1, str.length() - 1);  // "REAL TEXT"
+        
+        List<Node> res = new ArrayList<>();
+        for (Node node : contextNodes) {
+            if (node.getNodeType() == Node.TEXT_NODE && node.getNodeValue().equals(str)) {
+                res.add(node);
+            }
+        }
+        contextNodes = res;
+        return res;
+    } 
 
      // helper funcs
      // order matters, cannot use hashset for deduplication 
@@ -371,6 +515,41 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
         }
         return descendants;
     }
+
+	private List<Node> getInitialNodeFromFile(String filename) {
+        String filepath= filename;  
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        List<Node> starterNodeList = new ArrayList<>();
+    
+        try {
+            Document doc = dbf.newDocumentBuilder().parse(filepath);
+            starterNodeList.add(doc);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return starterNodeList;
+    }
+
+    private List<Node> getAllChildren(List<Node> nodes) {
+        List<Node> allChildrenNodes = new ArrayList<>();
+        for (Node node : nodes) {
+            NodeList childrenNode = node.getChildNodes();
+            for (int i = 0; i < childrenNode.getLength(); i++) {
+                allChildrenNodes.add(childrenNode.item(i));
+            }
+        }
+        return allChildrenNodes;
+    }
+
+    private List<Node> getAllParents(List<Node> nodes) {
+        List<Node> res = new ArrayList<>();
+
+        for (Node node : nodes) {
+            res.add(node.getParentNode());
+        }
+
+        return res;
+	}
 
     
 }
