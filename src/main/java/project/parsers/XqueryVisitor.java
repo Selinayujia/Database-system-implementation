@@ -55,10 +55,6 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 	T visitSequenceXQ(XQueryGrammarParser.SequenceXQContext ctx);[Done]
 	
 	T visitBracketXQ(XQueryGrammarParser.BracketXQContext ctx);[Done]
-
-
-
-
 	
 	T visitFlworXQ(XQueryGrammarParser.FlworXQContext ctx);
 	
@@ -76,8 +72,15 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
 	T visitReturnClause(XQueryGrammarParser.ReturnClauseContext ctx);
 
-	T visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx);
 
+
+
+
+
+
+	// Mingejie Song
+	T visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx);
+	
 	T visitOrCond(XQueryGrammarParser.OrCondContext ctx);
 
 	T visitEqualCond(XQueryGrammarParser.EqualCondContext ctx);
