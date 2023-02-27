@@ -61,9 +61,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 		visit(ctx.xq());
 		Element element = null;
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.newDocument();
+            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
             element = doc.createElement(text);
 
             for (Node n : contextNodes) {
@@ -121,6 +119,106 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
 	}
 
+	@Override public List<Node> visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx) {
+        List<Node> tempNodes = contextNodes;
+        HashMap<String, List<Node>> tempMap = varMap;
+
+        for (int i = 0; i < ctx.VAR().size(); i++) {
+            varMap.put(ctx.VAR(i).getText(), visit(ctx.xq(i)));
+        }
+        List<Node> res = visit(ctx.cond());
+
+        varMap = tempMap;
+        contextNodes = tempNodes;
+
+        return res;
+    }
+
+	@Override public List<Node> visitOrCond(XQueryGrammarParser.OrCondContext ctx) {
+        List<Node> res = new ArrayList<>();
+        List<Node> temp = new ArrayList<>(contextNodes);
+        List<Node> stepRes = visit(ctx.cond(0));
+        contextNodes = temp;
+        stepRes.addAll(visit(ctx.cond(1)));
+        res = deduplicate(stepRes);
+        contextNodes = res;
+
+        return res;
+    }
+
+	@Override public List<Node> visitEqualCond(XQueryGrammarParser.EqualCondContext ctx) {
+		List<Node> res = new ArrayList<>();
+        List<Node> temp = new ArrayList<>(contextNodes);
+        List<Node> resLeft = visit(ctx.xq(0));
+       	contextNodes = temp;
+        List<Node> resRight = visit(ctx.xq(1));
+
+        for (Node nodeLeft : resLeft) {
+            for (Node nodeRight : resRight) {
+                if (nodeLeft.isEqualNode(nodeRight)) {
+                    res.add(nodeLeft);
+                }
+            }
+        }
+        contextNodes = res;
+        return res;
+    }
+
+	@Override public List<Node> visitAndCond(XQueryGrammarParser.AndCondContext ctx) {
+        List<Node> temp = new ArrayList<>(contextNodes);
+        List<Node> resLeft = visit(ctx.cond(0));
+        contextNodes = temp;
+        List<Node> resRight = visit(ctx.cond(1));
+
+        if (resLeft.size() != 0 && resRight.size() != 0) {
+            return contextNodes;
+        }
+        return new ArrayList<>();
+    }
+
+	@Override public List<Node> visitNotCond(XQueryGrammarParser.NotCondContext ctx) {
+        List<Node> temp = new ArrayList<>(contextNodes);
+        List<Node> removeNodes = visit(ctx.cond());
+
+        if (removeNodes.size() != 0) {
+            return new ArrayList<>();
+        }
+		contextNodes = temp;
+        return contextNodes;
+    }
+
+	@Override public List<Node> visitEmptyCond(XQueryGrammarParser.EmptyCondContext ctx) {
+        List<Node> temp = contextNodes;
+        List<Node> res = visit(ctx.xq());
+        contextNodes = temp;
+        if (res.size() == 0) {
+            return contextNodes;
+        }
+        return new ArrayList<>();
+    }
+
+	@Override public List<Node> visitBracketCond(XQueryGrammarParser.BracketCondContext ctx) {
+        return visit(ctx.cond());
+    }
+
+	@Override public List<Node> visitIsCond(XQueryGrammarParser.IsCondContext ctx) {
+        List<Node> res = new ArrayList<>();
+        List<Node> temp = new ArrayList<>(contextNodes);
+        List<Node> resLeft = visit(ctx.xq(0));
+        contextNodes = temp;
+        List<Node> resRight = visit(ctx.xq(1));
+
+        for (Node leftNode : resLeft) {
+            for (Node rightNode : resRight) {
+                if (leftNode.isSameNode(rightNode)) {
+                    res.add(leftNode);
+                }
+            }
+        }
+        contextNodes = res;
+        return res;
+    }
+
 
 /*
     T visitStringXQ(XQueryGrammarParser.StringXQContext ctx); [Done]
@@ -135,37 +233,37 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 	
 	T visitBracketXQ(XQueryGrammarParser.BracketXQContext ctx);[Done]
 	
-	T visitFlworXQ(XQueryGrammarParser.FlworXQContext ctx);
+	T visitFlworXQ(XQueryGrammarParser.FlworXQContext ctx);[Done]
 	
-	T visitTagXQ(XQueryGrammarParser.TagXQContext ctx);
+	T visitTagXQ(XQueryGrammarParser.TagXQContext ctx);[Done]
 
-	T visitLetClauseXQ(XQueryGrammarParser.LetClauseXQContext ctx);
+	T visitLetClauseXQ(XQueryGrammarParser.LetClauseXQContext ctx);[Done]
 
-	T visitDoubleSlashXQ(XQueryGrammarParser.DoubleSlashXQContext ctx);
+	T visitDoubleSlashXQ(XQueryGrammarParser.DoubleSlashXQContext ctx);[Done]
 
-	T visitForClause(XQueryGrammarParser.ForClauseContext ctx);
+	T visitForClause(XQueryGrammarParser.ForClauseContext ctx);[Done]
 
-	T visitLetClause(XQueryGrammarParser.LetClauseContext ctx);
+	T visitLetClause(XQueryGrammarParser.LetClauseContext ctx);[Done]
 
-	T visitWhereClause(XQueryGrammarParser.WhereClauseContext ctx);
+	T visitWhereClause(XQueryGrammarParser.WhereClauseContext ctx);[Done]
 
-	T visitReturnClause(XQueryGrammarParser.ReturnClauseContext ctx);
+	T visitReturnClause(XQueryGrammarParser.ReturnClauseContext ctx);[Done]
 	
-	T visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx);
+	T visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx);[Done]
 	
-	T visitOrCond(XQueryGrammarParser.OrCondContext ctx);
+	T visitOrCond(XQueryGrammarParser.OrCondContext ctx);[Done]
 
-	T visitEqualCond(XQueryGrammarParser.EqualCondContext ctx);
+	T visitEqualCond(XQueryGrammarParser.EqualCondContext ctx);[Done]
 
-	T visitAndCond(XQueryGrammarParser.AndCondContext ctx);
+	T visitAndCond(XQueryGrammarParser.AndCondContext ctx);[Done]
 
-	T visitNotCond(XQueryGrammarParser.NotCondContext ctx);
+	T visitNotCond(XQueryGrammarParser.NotCondContext ctx); [Done]
 
-	T visitEmptyCond(XQueryGrammarParser.EmptyCondContext ctx);
+	T visitEmptyCond(XQueryGrammarParser.EmptyCondContext ctx);[Done]
 
-	T visitBracketCond(XQueryGrammarParser.BracketCondContext ctx);
+	T visitBracketCond(XQueryGrammarParser.BracketCondContext ctx);[Done]
 
-	T visitIsCond(XQueryGrammarParser.IsCondContext ctx);
+	T visitIsCond(XQueryGrammarParser.IsCondContext ctx);[Done]
 
 
 // Mingejie Song
