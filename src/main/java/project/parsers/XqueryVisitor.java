@@ -1,6 +1,10 @@
 package project.parsers;
 import java.util.*;
 import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
     private List<Node> contextNodes = new ArrayList<>();
@@ -43,6 +47,81 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 	@Override public List<Node> visitBracketXQ(XQueryGrammarParser.BracketXQContext ctx){
 		return visit(ctx.xq());
 	}
+	@Override public List<Node> visitFlworXQ(XQueryGrammarParser.FlworXQContext ctx){
+		List<Node> res = new ArrayList<>();
+        HashMap<String, List<Node>> temp = new HashMap<>(varMap);
+        recursiveHelperVar(ctx, res, 0);
+        varMap = temp;
+        return res;
+
+	}
+
+	@Override public List<Node> visitTagXQ(XQueryGrammarParser.TagXQContext ctx){
+		String text = ctx.TAGNAME(0).getText();
+		visit(ctx.xq());
+		Element element = null;
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+            element = doc.createElement(text);
+
+            for (Node n : contextNodes) {
+                Node c = n.cloneNode(true);
+                doc.adoptNode(c);
+                element.appendChild(c);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Exception: " + e.getMessage());
+        }
+
+        List<Node> res = new ArrayList<>();
+        res.add(element);
+        contextNodes = res;
+        return contextNodes;
+	}
+
+
+	@Override public List<Node> visitLetClauseXQ(XQueryGrammarParser.LetClauseXQContext ctx){
+		List<Node> tempNodes = contextNodes;
+        HashMap<String, List<Node>> tempMap = varMap;
+        contextNodes = visit(ctx.letClause());
+        List<Node> res = visit(ctx.xq());
+        contextNodes = tempNodes;
+        varMap = tempMap;
+        return res;
+
+	}
+
+	@Override public List<Node> visitDoubleSlashXQ(XQueryGrammarParser.DoubleSlashXQContext ctx){
+		visit(ctx.xq());
+		for(int i = 0; i <  contextNodes.size(); i++){
+        	contextNodes.addAll(getNodeDescendants((contextNodes.get(i))));
+		}
+       	contextNodes = visit(ctx.rp());
+        contextNodes = deduplicate(contextNodes);
+
+        return contextNodes;
+
+	}
+
+	@Override public List<Node> visitForClause(XQueryGrammarParser.ForClauseContext ctx){
+		return contextNodes;
+
+	}
+
+	@Override public List<Node> visitWhereClause(XQueryGrammarParser.WhereClauseContext ctx){
+		return visit(ctx.cond());
+
+	}
+	
+	@Override public List<Node> visitReturnClause(XQueryGrammarParser.ReturnClauseContext ctx){
+		return visit(ctx.xq());
+
+	}
+
+
 /*
     T visitStringXQ(XQueryGrammarParser.StringXQContext ctx); [Done]
     
@@ -162,6 +241,40 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
         }
         return result;
       }
+	  private void recursiveHelperVar(XQueryGrammarParser.FlworXQContext ctx, List<Node> nodes, int iter) {
+
+        if (ctx.forClause().VAR().size() == iter) {
+
+            if (ctx.letClause() != null) {
+                visit(ctx.letClause());
+            }
+
+            if ((ctx.whereClause() == null) || (visit(ctx.whereClause()).size() != 0)) {
+                nodes.addAll(visit(ctx.returnClause()));
+
+            }
+        } else {
+
+            List<Node> res = visit(ctx.forClause().xq(iter));
+            for (int i = 0; i < res.size(); i++) {
+
+                List<Node> n = new ArrayList<>();
+                n.add(res.get(i));
+
+                varMap.put(ctx.forClause().VAR(iter).getText(), n);
+                recursiveHelperVar(ctx, nodes, iter + 1);
+            }
+        }
+    }
+	private List<Node> getNodeDescendants(Node node) {
+        // recursively get descendants
+        List<Node> descendants = new ArrayList<>();
+        descendants.add(node);
+        for(int i = 0; i < node.getChildNodes().getLength(); i++){
+            descendants.addAll(getNodeDescendants(node.getChildNodes().item(i)));
+        }
+        return descendants;
+    }
 
     
 }
