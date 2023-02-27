@@ -294,6 +294,8 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
 	T visitSingleSlashRP(XQueryGrammarParser.SingleSlashRPContext ctx);
 
+	// Selina Zhang
+
 	T visitAndFilter(XQueryGrammarParser.AndFilterContext ctx);
 
 	T visitIsFilter(XQueryGrammarParser.IsFilterContext ctx);
