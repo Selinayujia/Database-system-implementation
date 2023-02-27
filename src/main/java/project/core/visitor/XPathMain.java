@@ -21,7 +21,7 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-public class main {
+public class XPathMain {
     public static void main(String[] args) {
         try {
             // Generate tree and visitor

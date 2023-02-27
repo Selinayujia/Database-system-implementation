@@ -2,7 +2,6 @@ package project.parsers;
 import java.util.*;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
