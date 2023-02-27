@@ -9,6 +9,20 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
     private List<Node> contextNodes = new ArrayList<>();
 	private HashMap<String, List<Node>> varMap = new HashMap<>();
     @Override public List<Node> visitStringXQ(XQueryGrammarParser.StringXQContext ctx) {
+        String constant = ctx.STRINGCONSTANT().getText();
+        constant = constant.substring(1, constant.length()-1);  
+		Node text = null;
+		try {
+            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            text = doc.createTextNode(constant);
+        } catch (Exception e) {
+            System.err.println("Exception: " + e.getMessage());
+        }
+
+        List<Node> res = new ArrayList<>();
+        res.add(text);
+        contextNodes = res;
+
         return contextNodes;
     }
 
