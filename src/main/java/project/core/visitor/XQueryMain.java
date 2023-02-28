@@ -23,7 +23,9 @@ import javax.xml.transform.stream.StreamResult;
 
 public class XQueryMain {
     public static void main(String[] args) {
+       
         try {
+           
             // Generate tree and visitor
             //CharStream query = CharStreams.fromFileName("query.txt");
             CharStream query = CharStreams.fromFileName(args[0]);
@@ -33,23 +35,25 @@ public class XQueryMain {
 
 
             parser.removeErrorListeners();
-            ParseTree tree = parser.ap();
+            ParseTree tree = parser.xq();
 
             // Visit the tree
             // below needs implementation in the XpathVisitor class
+           
             XqueryVisitor visitor = new XqueryVisitor();
             List<Node> res = visitor.visit(tree);
-
-            //parse the result back to a tree
+            
 
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 
-            Node body = doc.createElement("RESULT");
+          //  Node body = doc.createElement("RESULT");
             for (Node node : res) {
                 Node copy= doc.importNode(node, true);
-                body.appendChild(copy);
+               // body.appendChild(copy);
+               doc.appendChild(copy);
             }
-            doc.appendChild(body);
+           // doc.appendChild(body);
+            
 
             DOMSource xml_content = new DOMSource(doc);
 
@@ -61,7 +65,7 @@ public class XQueryMain {
             
         
         } catch(Exception e) {  
-            System.err.println("Exception: " + e.getMessage());
+            System.err.println("Exception here: " + e.getMessage());
         }
     }
     

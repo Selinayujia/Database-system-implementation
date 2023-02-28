@@ -1,1 +1,3 @@
-doc("j_caesar.xml")//((./ACT/SCENE),PERSONAE)/TITLE
+<result>{
+for $a in doc("j_caesar.xml")//PERSONAE, $b in $a/PERSONA where not (($b/text() = "JULIUS CAESAR") or ($b/text() = "Another Poet") )
+return $b }</result>

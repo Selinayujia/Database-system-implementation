@@ -4,17 +4,18 @@ grammar XPathGrammar;
 package project.parsers;
 }
 
-ap                  : 'doc("' FILENAME '")/' rp     #SingleSlashAP
-                    | 'doc("' FILENAME '")//' rp    #DoubleSlashAP;
+ap                  : ('doc' | 'document') '(' FILENAME ')' '/' rp     #SingleSlashAP
+                    | ('doc' | 'document') '(' FILENAME ')' '//' rp    #DoubleSlashAP;
+
 rp                  : TAGNAME                       #TagRP
                     | '*'                           #AllChildrenRP
                     | '.'                           #SelfRP
                     | '..'                          #ParentRP
                     | 'text()'                      #TextRP
                     | ATTRNAME                      #AttributeRP
-                    | '(' rp ')'                    #BracketRP
                     | rp '/' rp                     #SingleSlashRP
                     | rp '//' rp                    #DoubleSlashRP
+                    | '(' rp ')'                    #BracketRP
                     | rp '[' f ']'                  #FilteredRP
                     | rp ',' rp                     #SequenceRP;
 f                   : rp                            #RPFilter
@@ -32,7 +33,9 @@ fragment DIGIT      : [0-9];
 
 TAGNAME             : TEXT;
 ATTRNAME            : '@' TEXT;
-TEXT                : (LOWERCASE | UPPERCASE | DIGIT | '_')+;
-FILENAME            : TEXT '.' TEXT;
-STRINGCONSTANT      : '"' TEXT '"';
+TEXT                : (LOWERCASE | UPPERCASE | DIGIT | '_' | '-')+;
+FILENAME            : '"' TEXT '.' TEXT '"';
+STRINGCONSTANT      : '"' (~'"')* '"';
 WHITESPACE          : [ \t\r\n]+ -> skip;
+
+
