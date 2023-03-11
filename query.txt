@@ -1,3 +1,10 @@
 <result>{
-for $a in doc("j_caesar.xml")//PERSONAE, $b in $a/PERSONA where not (($b/text() = "JULIUS CAESAR") or ($b/text() = "Another Poet") )
-return $b }</result>
+for $s in doc("j_caesar.xml")//SCENE
+where $s//SPEAKER/text()="CAESAR" 
+return <scenes>{ <scene> {$s/TITLE/text()} </scene>, for $a in 
+doc("j_caesar.xml")//ACT 
+where some $s1 in (for $x in $a//SCENE
+where $x/TITLE/text()="SCENE II.  A public place." 
+return $x)
+satisfies $s1 eq $s and $a/TITLE/text() = "ACT I"
+return <act>{$a/TITLE/text()}</act>}</scenes>}</result> 

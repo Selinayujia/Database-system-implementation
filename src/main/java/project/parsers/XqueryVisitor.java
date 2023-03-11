@@ -1,6 +1,7 @@
 package project.parsers;
 
  
+import org.antlr.v4.runtime.LexerNoViableAltException;
 import org.w3c.dom.*;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,7 +17,9 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
         String content = ctx.VAR().getText();
         if (varMap.containsKey(content)){
-            contextNodes = varMap.get(content);
+            //!!!!!!!! always return a list, otherwise the contextNodes has the wrong value !!!!! example:  testcase4
+            // contextNodes =   varMap.get(content) ; -- wrong !!!!
+            contextNodes =  new ArrayList<>(varMap.get(content) );
         }
         else {
             //FIXME, var not define, raise an error and return? 
@@ -25,6 +28,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
         }
 
 		return contextNodes;
+ 
     }
 
     @Override public List<Node> visitStringXQ(XQueryGrammarParser.StringXQContext ctx) {
@@ -91,13 +95,13 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
     
     @Override public List<Node> visitTagXQ(XQueryGrammarParser.TagXQContext ctx) {
         String text = ctx.TAGNAME(0).getText();
-		visit(ctx.xq());
+		List<Node> context = visit(ctx.xq());
 		Element element = null;
         try {
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
             element = doc.createElement(text);
 
-            for (Node n : contextNodes) {
+            for (Node n : context) {
                 Node c = n.cloneNode(true);
                 doc.adoptNode(c);
                 element.appendChild(c);
@@ -134,11 +138,10 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
         return res;
 
-        // List<Node> tempNodes = contextNodes;
+        
         // HashMap<String, List<Node>> tempMap = new HashMap<>(varMap);
         // contextNodes = visit(ctx.letClause());
         // List<Node> res = visit(ctx.xq());
-        // contextNodes = tempNodes;
         // varMap = tempMap;
         // return res;
     }
@@ -162,9 +165,11 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
     }
 
     @Override public List<Node> visitReturnClause(XQueryGrammarParser.ReturnClauseContext ctx) {
-        return visit(ctx.xq());
+        List<Node> res = visit(ctx.xq());
+        return res;
     }
 
+    
     @Override public List<Node> visitEqualCond(XQueryGrammarParser.EqualCondContext ctx) {
         List<Node> res = new ArrayList<>();
         List<Node> temp = new ArrayList<>(contextNodes);
@@ -213,18 +218,20 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
      
     @Override public List<Node> visitMultipleCond(XQueryGrammarParser.MultipleCondContext ctx) {
-         List<Node> tempNodes = contextNodes;
-         HashMap<String, List<Node>> tempMap = new HashMap<>(varMap);;
-
+        List<Node> tempNodes =  contextNodes;
+        HashMap<String, List<Node>> tempMap = varMap ;
          for (int i = 0; i < ctx.VAR().size(); i++) {
-             varMap.put(ctx.VAR(i).getText(), visit(ctx.xq(i)));
+            //System.out.println("update Context: " +  ctx.VAR(i).getText());
+            List<Node> content = visit(ctx.xq(i))  ; 
+            varMap.put( ctx.VAR(i).getText(), content );    
          }
-         List<Node> res = visit(ctx.cond());
+        List<Node> res = visit(ctx.cond());
  
-         varMap = tempMap;
+        varMap = tempMap;
         contextNodes = tempNodes;
         
         return res;
+         
     }
 
     @Override public List<Node> visitBracketCond(XQueryGrammarParser.BracketCondContext ctx) {
@@ -555,7 +562,8 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
             }
 
             if ((ctx.whereClause() == null) || (visit(ctx.whereClause()).size() != 0)) {
-                nodes.addAll(visit(ctx.returnClause()));
+                List<Node> curRes = visit(ctx.returnClause());
+                nodes.addAll( curRes);
 
             }
         } else {
@@ -613,6 +621,8 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
         }
         return descendants;
     }
+
+    
 
     
 
