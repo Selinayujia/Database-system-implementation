@@ -5,15 +5,19 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+
 import org.w3c.dom.Node;
 import org.w3c.dom.Document;
 
 import java.util.*;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;  
 
 import project.parsers.XQueryGrammarLexer;
 import project.parsers.XQueryGrammarParser;
 import project.parsers.XqueryVisitor;
+import project.parsers.XqueryStringJoin;
 
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -37,23 +41,47 @@ public class XQueryMain {
             parser.removeErrorListeners();
             ParseTree tree = parser.xq();
 
+
+            // rewrite to string
+            XqueryStringJoin visitor = new XqueryStringJoin();
+            String rewriteOutput = visitor.visit(tree);
+
+            try {
+                FileWriter writer = new FileWriter("newQuery.txt");
+                writer.write(rewriteOutput);
+                writer.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
+        
+  
+              // Generate rewrite tree and visitor
+              CharStream rewriteStream = CharStreams.fromString(rewriteOutput);
+              XQueryGrammarLexer rewriteLexer = new XQueryGrammarLexer(rewriteStream);
+              CommonTokenStream rewriteTokens = new CommonTokenStream(rewriteLexer);
+              XQueryGrammarParser rewriteParser = new XQueryGrammarParser(rewriteTokens);
+              rewriteParser.removeErrorListeners();
+              ParseTree rewriteTree = rewriteParser.xq();
+
+              
+
             // Visit the tree
             // below needs implementation in the XpathVisitor class
            
-            XqueryVisitor visitor = new XqueryVisitor();
-            
-            List<Node> res = visitor.visit(tree);
+            XqueryVisitor joinVisitor = new XqueryVisitor();
+
+            List<Node> res = joinVisitor.visit(rewriteTree);
             
 
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 
-          //  Node body = doc.createElement("RESULT");
+
             for (Node node : res) {
                 Node copy= doc.importNode(node, true);
-               // body.appendChild(copy);
                doc.appendChild(copy);
             }
-           // doc.appendChild(body);
+    
             
 
             DOMSource xml_content = new DOMSource(doc);

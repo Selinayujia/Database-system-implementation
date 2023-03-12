@@ -13,12 +13,14 @@ project/parsers/XPathGrammarParser.class
 project/parsers/XQueryGrammarParser$XqContext.class
 project/parsers/XPathGrammarParser$EqualFilterContext.class
 project/parsers/XPathGrammarParser$IsFilterContext.class
+project/parsers/XqueryStringJoin$Location.class
 project/parsers/XQueryGrammarBaseVisitor.class
 project/parsers/XQueryGrammarParser$EmptyCondContext.class
 project/parsers/XQueryGrammarParser$FContext.class
 project/parsers/XQueryGrammarParser$TagRPContext.class
 project/parsers/XQueryGrammarParser$ForClauseContext.class
 project/parsers/XPathGrammarParser$SelfRPContext.class
+project/parsers/XQueryGrammarParser$JoinClauseContext.class
 project/parsers/XPathGrammarLexer.class
 project/parsers/XQueryGrammarParser$SingleSlashAPContext.class
 project/parsers/XPathGrammarParser$SingleSlashRPContext.class
@@ -28,6 +30,7 @@ project/parsers/XPathGrammarParser$TextRPContext.class
 project/parsers/XPathGrammarParser$AllChildrenRPContext.class
 project/parsers/XQueryGrammarParser.class
 project/parsers/XQueryGrammarParser$SingleSlashXQContext.class
+project/parsers/XQueryGrammarParser$JoinXQContext.class
 project/parsers/XQueryGrammarLexer.class
 project/parsers/XQueryGrammarParser$EqualFilterContext.class
 project/parsers/XPathGrammarParser$RpContext.class
@@ -36,6 +39,7 @@ project/parsers/XQueryGrammarParser$OrCondContext.class
 project/parsers/XpathVisitor.class
 project/core/visitor/XQueryMain.class
 project/parsers/XQueryGrammarParser$BracketFilterContext.class
+project/parsers/XQueryGrammarParser$IdListContext.class
 project/parsers/XQueryGrammarParser$AllChildrenRPContext.class
 project/parsers/XQueryGrammarParser$CondContext.class
 project/parsers/XQueryGrammarParser$SingleSlashRPContext.class
@@ -76,9 +80,11 @@ project/parsers/XQueryGrammarParser$IsFilterContext.class
 project/core/visitor/XPathMain.class
 project/parsers/XQueryGrammarParser$AndCondContext.class
 project/parsers/XQueryGrammarParser$VarXQContext.class
+project/parsers/XqueryStringJoin.class
 project/parsers/XqueryVisitor.class
 project/parsers/XQueryGrammarParser$ParentRPContext.class
 project/parsers/XQueryGrammarParser$BracketRPContext.class
+project/parsers/XqueryString.class
 project/parsers/XPathGrammarParser$SequenceRPContext.class
 project/parsers/XQueryGrammarParser$DoubleSlashXQContext.class
 project/parsers/XPathGrammarParser$TagRPContext.class

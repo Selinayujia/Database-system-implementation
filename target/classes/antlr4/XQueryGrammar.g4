@@ -10,7 +10,10 @@ xq                  : VAR                                                   #Var
                     | xq ',' xq                                             #SequenceXQ
                     | '<' TAGNAME '>' ('{')? xq ('}')? '</' TAGNAME '>'     #TagXQ
                     | forClause (letClause)? (whereClause)? returnClause    #FlworXQ
-                    | letClause xq                                          #LetClauseXQ ; 
+                    |letClause xq                                          #LetClauseXQ
+                    |joinClause                                            #JoinXQ;
+joinClause          : 'join' '(' xq ',' xq ',' idList ',' idList ')';
+idList              : '[' TAGNAME (',' TAGNAME)* ']';
 forClause           : 'for' VAR 'in' xq (',' VAR 'in' xq)*;
 letClause           : 'let' VAR ':=' xq (',' VAR ':=' xq)*;
 whereClause         : 'where' cond;

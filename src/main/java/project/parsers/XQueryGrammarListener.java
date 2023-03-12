@@ -46,6 +46,18 @@ public interface XQueryGrammarListener extends ParseTreeListener {
 	 */
 	void exitApXQ(XQueryGrammarParser.ApXQContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code JoinXQ}
+	 * labeled alternative in {@link XQueryGrammarParser#xq}.
+	 * @param ctx the parse tree
+	 */
+	void enterJoinXQ(XQueryGrammarParser.JoinXQContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code JoinXQ}
+	 * labeled alternative in {@link XQueryGrammarParser#xq}.
+	 * @param ctx the parse tree
+	 */
+	void exitJoinXQ(XQueryGrammarParser.JoinXQContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code VarXQ}
 	 * labeled alternative in {@link XQueryGrammarParser#xq}.
 	 * @param ctx the parse tree
@@ -129,6 +141,26 @@ public interface XQueryGrammarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDoubleSlashXQ(XQueryGrammarParser.DoubleSlashXQContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link XQueryGrammarParser#joinClause}.
+	 * @param ctx the parse tree
+	 */
+	void enterJoinClause(XQueryGrammarParser.JoinClauseContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link XQueryGrammarParser#joinClause}.
+	 * @param ctx the parse tree
+	 */
+	void exitJoinClause(XQueryGrammarParser.JoinClauseContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link XQueryGrammarParser#idList}.
+	 * @param ctx the parse tree
+	 */
+	void enterIdList(XQueryGrammarParser.IdListContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link XQueryGrammarParser#idList}.
+	 * @param ctx the parse tree
+	 */
+	void exitIdList(XQueryGrammarParser.IdListContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link XQueryGrammarParser#forClause}.
 	 * @param ctx the parse tree

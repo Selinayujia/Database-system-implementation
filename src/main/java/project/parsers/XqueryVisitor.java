@@ -1,16 +1,21 @@
 package project.parsers;
 
- 
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.LexerNoViableAltException;
 import org.w3c.dom.*;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.ArrayList;
+import java.io.StringWriter;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
     private HashMap<String, List<Node>> varMap = new HashMap<>();
     private List<Node> contextNodes = new ArrayList<>();
+    LinkedList<String> idList = new LinkedList<>();
  
    
     @Override public List<Node> visitVarXQ(XQueryGrammarParser.VarXQContext ctx) {
@@ -526,6 +531,128 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
         return res;
     } 
 
+    // milestone3
+
+    @Override public List<Node> visitJoinXQ(XQueryGrammarParser.JoinXQContext ctx) {
+        return visit(ctx.joinClause());
+    }
+
+    @Override public List<Node> visitJoinClause(XQueryGrammarParser.JoinClauseContext ctx) {
+        List<Node> tmp = contextNodes;
+        List<Node> resLeft = visit(ctx.xq(0));
+        contextNodes = tmp;
+        List<Node> resRight = visit(ctx.xq(1));
+
+        List<TerminalNode> keysLeft = ctx.idList(0).TAGNAME();
+        List<TerminalNode> keysRight = ctx.idList(1).TAGNAME();
+
+
+
+        HashMap<String, LinkedList<Node>> eq = new HashMap<>();
+
+        for (Node r : resRight) {
+            String compareKey = tupleToMap(r, keysRight);
+            if (!eq.containsKey(compareKey)) {
+                eq.put(compareKey, new LinkedList<>());
+            }
+
+            eq.get(compareKey).add(r);
+        }
+
+        List<Node> ret = new LinkedList<>();
+        for (Node l : resLeft) {
+            String compareKey = tupleToMap(l, keysLeft);
+            
+            if (eq.containsKey(compareKey)) {
+                System.out.println("find");
+                LinkedList<Node> rightValues = eq.get(compareKey);
+                for (Node r : rightValues) {
+                    LinkedList<Node> joining = new LinkedList<>();
+                    List<Node> listLeft = new ArrayList<>();
+                    List<Node> listRight = new ArrayList<>();
+                    listLeft.add(l);
+                    listRight.add(r);
+                    joining.addAll(getAllChildren(listLeft));
+                    joining.addAll(getAllChildren(listRight));
+
+
+                    Element element = null;
+                    try {
+                        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+                        element = doc.createElement(l.getNodeName());
+
+                        for (Node n : joining) {
+                            Node c = n.cloneNode(true);
+                            doc.adoptNode(c);
+                            element.appendChild(c);
+                        }
+
+                    } catch (Exception e) {
+                        System.err.println("Exception: " + e.getMessage());
+                    }
+
+
+
+                    ret.add(element);
+                }
+            }
+
+        }
+
+        contextNodes = ret;
+        return contextNodes;
+    }
+
+    @Override public List<Node> visitIdList(XQueryGrammarParser.IdListContext ctx) { 
+        return visitChildren(ctx); 
+    }
+
+
+
+// private funcs
+
+
+// milestone 3
+    private String tupleToMap(Node tuple, List<TerminalNode> keys) {
+        String res = "";
+        List<Node> tmp = new ArrayList<>();
+        tmp.add(tuple);
+        List<Node> children = getAllChildren(tmp);
+
+        for (TerminalNode key : keys) {
+            for (Node child : children) {
+
+                if (child.getNodeName().equals(key.getText())) {
+                    List<Node> temp = new ArrayList<>();
+                    temp.add(child);
+                    res += nodeListToString(getAllChildren(temp));
+                    // allNodes.addAll(getAllChildren(temp));
+                }
+            }
+        }
+        return res;
+    }
+
+    private String nodeListToString(List<Node> nodes) {
+        String ret = "";
+        for (int i = 0; i < nodes.size(); i++) {
+            ret += nodeToString(nodes.get(i)) + "\n";
+        }
+        return ret;
+    }
+
+    private String nodeToString(Node inputNode) {
+        StringWriter sw = new StringWriter();
+        try {
+            Transformer t = TransformerFactory.newInstance().newTransformer();
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            t.transform(new DOMSource(inputNode), new StreamResult(sw));
+        } catch (TransformerException te) {
+            System.out.println("NodeToString Exception");
+        }
+        return sw.toString();
+    }
  
 
     private List<Node> getAllChildren(List<Node> nodes) {
