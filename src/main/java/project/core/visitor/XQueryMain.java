@@ -16,8 +16,9 @@ import java.io.IOException;
 
 import project.parsers.XQueryGrammarLexer;
 import project.parsers.XQueryGrammarParser;
+import project.parsers.XqueryRewriter;
 import project.parsers.XqueryVisitor;
-import project.parsers.XqueryStringJoin;
+
 
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -43,7 +44,7 @@ public class XQueryMain {
 
 
             // rewrite to string
-            XqueryStringJoin visitor = new XqueryStringJoin();
+            XqueryRewriter visitor = new XqueryRewriter();
             String rewriteOutput = visitor.visit(tree);
 
             try {
@@ -52,7 +53,7 @@ public class XQueryMain {
                 writer.close();
             } catch (IOException e) {
                 System.out.println("An error occurred.");
-                e.printStackTrace();
+                e.printStackTrace(); 
             }
         
   

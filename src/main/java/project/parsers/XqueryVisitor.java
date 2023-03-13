@@ -1,7 +1,6 @@
 package project.parsers;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.LexerNoViableAltException;
 import org.w3c.dom.*;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,7 +34,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 		return contextNodes;
  
     }
-
+ 
     @Override public List<Node> visitStringXQ(XQueryGrammarParser.StringXQContext ctx) {
          
         String constant = ctx.STRINGCONSTANT().getText();

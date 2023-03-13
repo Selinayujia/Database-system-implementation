@@ -1,7 +1,24 @@
 package project.parsers;
-public class XqueryString extends XQueryGrammarBaseVisitor<String>{
-    @Override public String visitVarXQ(XQueryGrammarParser.VarXQContext ctx) {
-        return ctx.VAR().getText();
+import java.util.*;
+
+public class XqueryRewriter extends XQueryGrammarBaseVisitor<String>{
+     // <key : root var, value :  a list of var children > 
+     Map<String, List<String>> joinGroups = new LinkedHashMap<>();
+     // eg: <$s , ($a, $m ) > => join on $s == $a , $s == $m 
+     Map<String, HashSet<String>> joinConditions = new HashMap<>();
+     // used in rewriting the FOR part
+     Map<String, String> varContents = new HashMap<>();  
+     List<String> joinedVars = new LinkedList<>();  
+     
+ 
+     boolean rewrite = false ;
+     @Override public String visitVarXQ(XQueryGrammarParser.VarXQContext ctx) {
+        String varStr =  ctx.VAR().getText();
+        if (rewrite) {
+            varStr = "$tuple/" + varStr.substring(1) + "/*";
+        }
+        return varStr;
+        
     }
 
     @Override public String visitStringXQ(XQueryGrammarParser.StringXQContext ctx) {
@@ -34,16 +51,73 @@ public class XqueryString extends XQueryGrammarBaseVisitor<String>{
     }
 
     @Override public String visitFlworXQ(XQueryGrammarParser.FlworXQContext ctx) {
-        String ret = "";
-        ret += visit(ctx.forClause());
-        if (ctx.letClause() != null) {
-            ret += visit(ctx.letClause());
-        }
+        visit(ctx.forClause());
+       
+        // assume there is no let clause in project specification 
         if (ctx.whereClause() != null) {
-            ret += visit(ctx.whereClause());
+            visit(ctx.whereClause());
         }
-        ret += visit(ctx.returnClause());
-        return ret;
+       
+        visit(ctx.returnClause());
+       
+        if (joinGroups.size() <= 1) { // there is no join, return flworXQ
+            String ret = "";
+            ret += visit(ctx.forClause());
+            if (ctx.letClause() != null) {
+                ret += visit(ctx.letClause());
+            }
+            if (ctx.whereClause() != null) {
+                ret += visit(ctx.whereClause());
+            }
+            ret += visit(ctx.returnClause());
+            return ret ;
+        }
+        
+        
+        // Rewrite the query to join format
+        rewrite = true ;  
+        String res = "for $tuple in ";
+        String curGroup = constructJoinGroup();
+
+        
+        while (!joinGroups.isEmpty()) {
+            List<String> leftJoin = new LinkedList<>();
+            List<String> rightJoin = new LinkedList<>();
+
+            
+            String root = joinGroups.keySet().toArray()[0].toString();
+            List<String> newGroupVar = joinGroups.get(root);
+         
+            for (String  newVar : newGroupVar ) { 
+                if (joinConditions.containsKey(newVar)) { // newVar is key
+                    for (String v : joinConditions.get(newVar)) {
+                        if (joinedVars.contains(v)) { // value is in joinedVars
+                            rightJoin.add(newVar.substring(1));
+                            leftJoin.add(v.substring(1));
+                            joinConditions.get(newVar).remove(v);
+                        }
+                    }
+                } else { // newVar is not key, but in the value set
+                    for (String key : joinConditions.keySet()) {
+                        if (joinConditions.get(key).contains(newVar) && joinedVars.contains (key)) { // value is the newVar
+                            rightJoin.add(newVar.substring(1));
+                            leftJoin.add(key.substring(1));
+                            joinConditions.get(key).remove(newVar);
+                        }
+                    }
+                }
+
+            }
+
+
+            String  newGroup = constructJoinGroup();
+            curGroup = "join(" + curGroup + ",\n" + newGroup  + ",\n" + "["
+                    + String.join(", ", leftJoin) + "], [" + String.join(", ", rightJoin) + "])";
+        }
+        res += curGroup + visit(ctx.returnClause());
+       
+        return res;
+        
     }
 
     @Override public String visitLetClauseXQ(XQueryGrammarParser.LetClauseXQContext ctx) {
@@ -72,6 +146,35 @@ public class XqueryString extends XQueryGrammarBaseVisitor<String>{
     }
 
     @Override public String visitForClause(XQueryGrammarParser.ForClauseContext ctx) {
+        //construct rewrite content 
+        Map<String, String> parentMap = new HashMap<>();
+        int varNums = ctx.VAR().size();
+        for (int i = 0; i < varNums; i++) {
+            String curVar = ctx.VAR(i).getText();
+            String xqStr = ctx.xq(i).getText();     
+            varContents.put(curVar, xqStr); // used in rewriting the FOR part
+            if (xqStr.charAt(0) == '$') { // children var
+                int idx = xqStr.indexOf('/');
+                if (idx != -1) {
+                    xqStr = xqStr.substring(0, idx);
+                }
+                parentMap.put(curVar, xqStr);
+
+                //find real parent
+                String realParent = curVar;
+                while (parentMap.get(realParent) != null) {
+                    realParent = parentMap.get(realParent);
+                }
+
+                joinGroups.get(realParent).add(curVar);
+            }
+            else {  // root var
+                parentMap.put(curVar, null);
+                joinGroups.put(curVar, new LinkedList<>());
+                joinGroups.get(curVar).add(curVar);
+            }
+        }
+        //construct return string
         String ret = "";
         int VarCount = ctx.VAR().size();
         ret += " for " + ctx.VAR(0).getText() + " in " + visit(ctx.xq(0));
@@ -100,6 +203,11 @@ public class XqueryString extends XQueryGrammarBaseVisitor<String>{
     }
 
     @Override public String visitEqualCond(XQueryGrammarParser.EqualCondContext ctx) {
+        String key = visit(ctx.xq(0));
+        joinConditions.putIfAbsent( key, new HashSet<>());            
+        joinConditions.get(key).add(visit(ctx.xq(1)));
+        
+       
         return visit(ctx.xq(0)) + "=" + visit(ctx.xq(1));
     }
 
@@ -224,5 +332,72 @@ public class XqueryString extends XQueryGrammarBaseVisitor<String>{
 
     @Override public String visitNotFilter(XQueryGrammarParser.NotFilterContext ctx) {
         return " not " + visit(ctx.f());
+    }
+
+
+    //helper function 
+    private String constructJoinGroup() {
+        String root = joinGroups.keySet().toArray()[0].toString();
+        List<String> vars = joinGroups.get(root);
+        joinGroups.remove(root);
+        String res = "";
+
+        // For  
+        res += " for ";
+        int len = vars.size();
+        for (int i = 0; i < len; i++) {
+            if (i != 0) {
+                res += ",\n";
+            }
+            res += vars.get(i) + " in " + varContents.get(vars.get(i));  
+        }
+
+
+        // Where
+        // handle conditions in the same group (optimization: move select upward)  
+        List<String> rewriteConditions = new LinkedList<>(); 
+        for (String var : vars) { // for each var in same group
+            for (String left : joinConditions.keySet()) {
+                if (left.equals(var)) { // left side is the curVar + right side is in vars or is stringConstant
+                    for (String right : joinConditions.get(left)) {
+                        if (vars.contains(right) || right.charAt(0) != '$') {
+                            rewriteConditions.add(left + " eq " + right);
+                            joinConditions.get(left).remove(right);
+                        }
+                    }
+                } else if (joinConditions.get(left).contains(var) && vars.contains(left)) {  // left side is in vars + right side contains curVar
+                    rewriteConditions .add(left + " eq " + var);
+                    joinConditions.get(left).remove(var);
+                } else if (left.charAt(0) != '$') { // left side is stringConstant
+                    for (String right : joinConditions.get(left)) {
+                        if (right.charAt(0) != '$') { // right side is also stringConstant
+                            rewriteConditions .add(left + " eq " + right);
+                            joinConditions.get(left).remove(right);
+                        } else if (right.equals(var)) { // right side is the curVar
+                            rewriteConditions.add(left + " eq " + right);
+                            joinConditions.get(left).remove(right);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!rewriteConditions .isEmpty()) {
+            res += "\nwhere ";
+            res += String.join("\nand ", rewriteConditions );
+        }
+
+        // Return part
+        res += "\nreturn <tuple>\n";
+        for (int i = 0; i < len; i++) {
+            if (i != 0) {
+                res += ",\n";
+            }
+            String varName = vars.get(i).substring(1);
+            res += "<" + varName + ">{" + vars.get(i) + "}</" + varName + ">";
+        }
+        res += "\n</tuple>";
+        joinedVars.addAll(vars);
+        return res;
     }
 }
