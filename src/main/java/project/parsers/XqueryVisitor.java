@@ -14,8 +14,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
     private HashMap<String, List<Node>> varMap = new HashMap<>();
     private List<Node> contextNodes = new ArrayList<>();
-    LinkedList<String> idList = new LinkedList<>();
- 
+    
    
     @Override public List<Node> visitVarXQ(XQueryGrammarParser.VarXQContext ctx) {
 
@@ -540,33 +539,33 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
         List<Node> tmp = contextNodes;
         List<Node> resLeft = visit(ctx.xq(0));
         contextNodes = tmp;
-        List<Node> resRight = visit(ctx.xq(1));
+        List<Node> resRight = visit(ctx.xq(1)); // list of tuples
 
-        List<TerminalNode> keysLeft = ctx.idList(0).TAGNAME();
-        List<TerminalNode> keysRight = ctx.idList(1).TAGNAME();
+        List<TerminalNode> joinIdLeft = ctx.idList(0).TAGNAME();
+        List<TerminalNode> joinIdRight = ctx.idList(1).TAGNAME();
 
 
 
-        HashMap<String, LinkedList<Node>> eq = new HashMap<>();
+        Map<String, LinkedList<Node>> leftSideKeyTupleMap = new HashMap<>();
 
-        for (Node r : resRight) {
-            String compareKey = tupleToMap(r, keysRight);
-            if (!eq.containsKey(compareKey)) {
-                eq.put(compareKey, new LinkedList<>());
+        for (Node l : resLeft) {
+            String key = generateKeyString(l, joinIdLeft);
+            if (!leftSideKeyTupleMap.containsKey(key)) {
+                leftSideKeyTupleMap.put(key, new LinkedList<>());
             }
 
-            eq.get(compareKey).add(r);
+            leftSideKeyTupleMap.get(key).add(l);
         }
 
-        List<Node> ret = new LinkedList<>();
-        for (Node l : resLeft) {
-            String compareKey = tupleToMap(l, keysLeft);
+        List<Node> res = new LinkedList<>();
+        for (Node r : resRight) {
+            String key = generateKeyString(r, joinIdRight);
             
-            if (eq.containsKey(compareKey)) {
+            if (leftSideKeyTupleMap.containsKey(key)) { // left, right both have the same key, perform join
                 System.out.println("find");
-                LinkedList<Node> rightValues = eq.get(compareKey);
-                for (Node r : rightValues) {
-                    LinkedList<Node> joining = new LinkedList<>();
+                List<Node> leftValues = leftSideKeyTupleMap.get(key);
+                for (Node l : leftValues) {
+                    List<Node> joining = new LinkedList<>();
                     List<Node> listLeft = new ArrayList<>();
                     List<Node> listRight = new ArrayList<>();
                     listLeft.add(l);
@@ -574,7 +573,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
                     joining.addAll(getAllChildren(listLeft));
                     joining.addAll(getAllChildren(listRight));
 
-
+                    // make element 
                     Element element = null;
                     try {
                         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -592,13 +591,13 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
 
 
-                    ret.add(element);
+                    res.add(element);
                 }
             }
 
         }
 
-        contextNodes = ret;
+        contextNodes = res;
         return contextNodes;
     }
 
@@ -612,47 +611,66 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
 
 
 // milestone 3
-    private String tupleToMap(Node tuple, List<TerminalNode> keys) {
+    private String generateKeyString(Node tuple, List<TerminalNode> joinedIds) {
         String res = "";
         List<Node> tmp = new ArrayList<>();
         tmp.add(tuple);
         List<Node> children = getAllChildren(tmp);
 
-        for (TerminalNode key : keys) {
+        for (TerminalNode id : joinedIds) {
             for (Node child : children) {
 
-                if (child.getNodeName().equals(key.getText())) {
+                if (child.getNodeName().equals(id.getText())) { 
                     List<Node> temp = new ArrayList<>();
                     temp.add(child);
                     res += nodeListToString(getAllChildren(temp));
-                    // allNodes.addAll(getAllChildren(temp));
+                     
                 }
             }
         }
         return res;
     }
+    // private String nodeListToHashString(List<Node> nodes) { 
+    //     String ret = "";
+    //     for (int i = 0; i < nodes.size(); i++) {
+    //         ret += nodes.get(i).hashCode() + "\n";
+    //     }
+    //     return ret;
+    // }
 
-    private String nodeListToString(List<Node> nodes) {
-        String ret = "";
+    private String nodeListToString(List<Node> nodes) { 
+        String res = "";
         for (int i = 0; i < nodes.size(); i++) {
-            ret += nodeToString(nodes.get(i)) + "\n";
+
+            StringWriter sw = new StringWriter();
+            try {
+                Transformer t = TransformerFactory.newInstance().newTransformer();
+                t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+                t.setOutputProperty(OutputKeys.INDENT, "yes");
+                t.transform(new DOMSource(nodes.get(i)), new StreamResult(sw));
+            } catch (TransformerException te) {
+                System.out.println("NodeToString Exception");
+            }
+            res +=  sw.toString() + "\n";
         }
-        return ret;
+        return res;
     }
 
-    private String nodeToString(Node inputNode) {
-        StringWriter sw = new StringWriter();
-        try {
-            Transformer t = TransformerFactory.newInstance().newTransformer();
-            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            t.setOutputProperty(OutputKeys.INDENT, "yes");
-            t.transform(new DOMSource(inputNode), new StreamResult(sw));
-        } catch (TransformerException te) {
-            System.out.println("NodeToString Exception");
-        }
-        return sw.toString();
-    }
+    // private String nodeToString(Node inputNode) { 
+    //     StringWriter sw = new StringWriter();
+    //     try {
+    //         Transformer t = TransformerFactory.newInstance().newTransformer();
+    //         t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+    //         t.setOutputProperty(OutputKeys.INDENT, "yes");
+    //         t.transform(new DOMSource(inputNode), new StreamResult(sw));
+    //     } catch (TransformerException te) {
+    //         System.out.println("NodeToString Exception");
+    //     }
+    //     return sw.toString();
+    // }
  
+
+
 
     private List<Node> getAllChildren(List<Node> nodes) {
         List<Node> res = new ArrayList<>();
