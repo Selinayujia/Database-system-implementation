@@ -1,4 +1,4 @@
-<result>{for $tuple in join( for $s in doc("j_caesar.xml")//SPEAKER,
+for $tuple in join( for $s in doc("j_caesar.xml")//SPEAKER,
 $stxt in $s/text()
 where $stxt eq "CAESAR"
 return <tuple>
@@ -12,4 +12,4 @@ return <tuple>
 <sp>{$sp}</sp>
 </tuple>,
 [s], [sp])
-return <act>{$tuple/a/*/TITLE/text()}</act>}</result>
+return <act>{$tuple/a/*/TITLE/text()}</act> 

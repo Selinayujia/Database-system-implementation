@@ -32,8 +32,8 @@ public class XQueryMain {
         try {
            
             // Generate tree and visitor
-            CharStream query = CharStreams.fromFileName("query.txt");
-            //CharStream query = CharStreams.fromFileName(args[0]);
+            //CharStream query = CharStreams.fromFileName("newQuery.txt");
+            CharStream query = CharStreams.fromFileName(args[0]);
             XQueryGrammarLexer lexer = new XQueryGrammarLexer(query);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             XQueryGrammarParser parser = new XQueryGrammarParser(tokens);
@@ -41,30 +41,6 @@ public class XQueryMain {
 
             parser.removeErrorListeners();
             ParseTree tree = parser.xq();
-
-
-            // rewrite to string
-            XqueryRewriter visitor = new XqueryRewriter();
-            String rewriteOutput = visitor.visit(tree);
-
-            try {
-                FileWriter writer = new FileWriter("newQuery.txt");
-                writer.write(rewriteOutput);
-                writer.close();
-            } catch (IOException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace(); 
-            }
-        
-  
-              // Generate rewrite tree and visitor
-              CharStream rewriteStream = CharStreams.fromString(rewriteOutput);
-              XQueryGrammarLexer rewriteLexer = new XQueryGrammarLexer(rewriteStream);
-              CommonTokenStream rewriteTokens = new CommonTokenStream(rewriteLexer);
-              XQueryGrammarParser rewriteParser = new XQueryGrammarParser(rewriteTokens);
-              rewriteParser.removeErrorListeners();
-              ParseTree rewriteTree = rewriteParser.xq();
-
               
 
             // Visit the tree
@@ -72,7 +48,16 @@ public class XQueryMain {
            
             XqueryVisitor joinVisitor = new XqueryVisitor();
 
-            List<Node> res = joinVisitor.visit(rewriteTree);
+            long startTime = System.nanoTime();
+
+            List<Node> res = joinVisitor.visit(tree);
+
+            long endTime = System.nanoTime();
+            long duration = endTime - startTime;
+            long durationInMillis = duration / 1000000;
+            System.out.println("Execution time: " + durationInMillis + " milliseconds");
+            
+           
             
 
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -88,8 +73,8 @@ public class XQueryMain {
             DOMSource xml_content = new DOMSource(doc);
 
 
-            StreamResult file = new StreamResult(new File("./output.xml"));
-            //StreamResult file = new StreamResult(new File(args[1]));
+            //StreamResult file = new StreamResult(new File("./output.xml"));
+            StreamResult file = new StreamResult(new File(args[1]));
             Transformer tf = TransformerFactory.newInstance().newTransformer();
             tf.transform(xml_content, file);
             

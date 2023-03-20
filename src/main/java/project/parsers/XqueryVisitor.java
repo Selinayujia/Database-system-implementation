@@ -562,7 +562,7 @@ public class XqueryVisitor extends XQueryGrammarBaseVisitor<List<Node>> {
             String key = generateKeyString(r, joinIdRight);
             
             if (leftSideKeyTupleMap.containsKey(key)) { // left, right both have the same key, perform join
-                System.out.println("find");
+                //System.out.println("find");
                 List<Node> leftValues = leftSideKeyTupleMap.get(key);
                 for (Node l : leftValues) {
                     List<Node> joining = new LinkedList<>();
