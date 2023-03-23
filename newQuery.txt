@@ -1,15 +1,46 @@
-for $tuple in join( for $s in doc("j_caesar.xml")//SPEAKER,
-$stxt in $s/text()
-where $stxt eq "CAESAR"
-return <tuple>
-<s>{$s}</s>,
-<stxt>{$stxt}</stxt>
-</tuple>,
- for $a in doc("j_caesar.xml")//ACT,
-$sp in $a//SPEAKER
+<result>for $tuple in join(join(join( for $a in doc("j_caesar.xml")//ACT,
+$sa in $a//SCENE,
+$spa in $sa//SPEAKER,
+$spea in $sa//SPEECH
 return <tuple>
 <a>{$a}</a>,
-<sp>{$sp}</sp>
+<sa>{$sa}</sa>,
+<spa>{$spa}</spa>,
+<spea>{$spea}</spea>
 </tuple>,
-[s], [sp])
-return <act>{$tuple/a/*/TITLE/text()}</act> 
+ for $b in doc("j_caesar.xml")//ACT,
+$sb in $b//SCENE,
+$spb in $sb//SPEAKER/text(),
+$speb in $sb//SPEECH
+where $spb eq "FLAVIUS"
+return <tuple>
+<b>{$b}</b>,
+<sb>{$sb}</sb>,
+<spb>{$spb}</spb>,
+<speb>{$speb}</speb>
+</tuple>,
+[], []),
+ for $c in doc("j_caesar.xml")//ACT,
+$sc in $c//SCENE,
+$spc in $sc//SPEAKER,
+$spec in $sc//SPEECH
+return <tuple>
+<c>{$c}</c>,
+<sc>{$sc}</sc>,
+<spc>{$spc}</spc>,
+<spec>{$spec}</spec>
+</tuple>,
+[sb, spa, speb], [sc, spc, spec]),
+ for $d in doc("j_caesar.xml")//ACT,
+$sd in $d//SCENE,
+$spd in $sd//SPEAKER/text(),
+$sped in $sd//SPEECH
+where $spd eq "FLAVIUS"
+return <tuple>
+<d>{$d}</d>,
+<sd>{$sd}</sd>,
+<spd>{$spd}</spd>,
+<sped>{$sped}</sped>
+</tuple>,
+[sa, spea], [sd, sped])
+return <result>{<title>{$tuple/sa/*/TITLE/text()}</title>}</result></result>

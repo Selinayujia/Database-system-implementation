@@ -32,8 +32,8 @@ public class XQueryMain {
         try {
            
             // Generate tree and visitor
-            //CharStream query = CharStreams.fromFileName("newQuery.txt");
-            CharStream query = CharStreams.fromFileName(args[0]);
+            CharStream query = CharStreams.fromFileName("query.txt");
+            //CharStream query = CharStreams.fromFileName(args[0]);
             XQueryGrammarLexer lexer = new XQueryGrammarLexer(query);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             XQueryGrammarParser parser = new XQueryGrammarParser(tokens);
@@ -73,8 +73,8 @@ public class XQueryMain {
             DOMSource xml_content = new DOMSource(doc);
 
 
-            //StreamResult file = new StreamResult(new File("./output.xml"));
-            StreamResult file = new StreamResult(new File(args[1]));
+            StreamResult file = new StreamResult(new File("./output.xml"));
+            //StreamResult file = new StreamResult(new File(args[1]));
             Transformer tf = TransformerFactory.newInstance().newTransformer();
             tf.transform(xml_content, file);
             
