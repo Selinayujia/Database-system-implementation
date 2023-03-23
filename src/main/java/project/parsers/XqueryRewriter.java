@@ -359,10 +359,23 @@ public class XqueryRewriter extends XQueryGrammarBaseVisitor<String>{
         for (String var : vars) { // for each var in same group
             for (String left : joinConditions.keySet()) {
                 if (left.equals(var)) { // left side is the curVar + right side is in vars or is stringConstant
-                    for (String right : joinConditions.get(left)) {
+                    
+                     // for (String right : joinConditions.get(left)) {
+                    //     if (vars.contains(right) || right.charAt(0) != '$') {
+                    //         rewriteConditions.add(left + " eq " + right);
+                    //         joinConditions.get(left).remove(right);
+                    //     }
+                    // }
+                    
+                    int size =  joinConditions.get(left).size();
+                    for(int i=0; i<size ; i++){
+                        List<String> list = new ArrayList<String>(joinConditions.get(left));
+                        String right = list.get(i);
                         if (vars.contains(right) || right.charAt(0) != '$') {
                             rewriteConditions.add(left + " eq " + right);
                             joinConditions.get(left).remove(right);
+                            size--;
+                            i--;
                         }
                     }
                 } else if (joinConditions.get(left).contains(var) && vars.contains(left)) {  // left side is in vars + right side contains curVar

@@ -1,15 +1,28 @@
-for $tuple in join( for $s in doc("j_caesar.xml")//SPEAKER,
-$stxt in $s/text()
-where $stxt eq "CAESAR"
-return <tuple>
-<s>{$s}</s>,
-<stxt>{$stxt}</stxt>
-</tuple>,
- for $a in doc("j_caesar.xml")//ACT,
-$sp in $a//SPEAKER
+<result>{for $tuple in join(join( for $a in doc("j_caesar.xml")//ACT,
+$sa in $a//SCENE,
+$saa in $sa/TITLE/text()
 return <tuple>
 <a>{$a}</a>,
-<sp>{$sp}</sp>
+<sa>{$sa}</sa>,
+<saa>{$saa}</saa>
 </tuple>,
-[s], [sp])
-return <act>{$tuple/a/*/TITLE/text()}</act> 
+ for $b in doc("j_caesar.xml")//ACT,
+$sb in $b//SCENE,
+$sbb in $sb/TITLE/text()
+where $sbb eq "SCENE I.  Rome. A street."
+return <tuple>
+<b>{$b}</b>,
+<sb>{$sb}</sb>,
+<sbb>{$sbb}</sbb>
+</tuple>,
+[], []),
+ for $c in doc("j_caesar.xml")//ACT,
+$sc in $c//SCENE,
+$scc in $sc/TITLE/text()
+return <tuple>
+<c>{$c}</c>,
+<sc>{$sc}</sc>,
+<scc>{$scc}</scc>
+</tuple>,
+[sbb, saa], [scc, scc])
+return <RESULTS>{<TITLE>{$tuple/sa/*/TITLE/text()}</TITLE>}</RESULTS>}</result>

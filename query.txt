@@ -1,0 +1,14 @@
+<result> {
+for $a in doc("j_caesar.xml")//ACT,
+	$b in doc("j_caesar.xml")//ACT,
+    $c in doc("j_caesar.xml")//ACT,
+    $sa in $a//SCENE,
+    $sb in $b//SCENE,
+    $sc in $c//SCENE,
+	$saa in $sa/TITLE/text(),
+	$sbb in $sb/TITLE/text(),
+	$scc in $sc/TITLE/text()
+where $sbb eq "SCENE I.  Rome. A street." and $sbb eq $scc and $saa eq $scc
+return <RESULTS>{ <TITLE>{$sa/TITLE/text()}</TITLE> }</RESULTS>
+
+}</result>
