@@ -5,14 +5,14 @@
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XPathGrammarBaseVisitor.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/core/visitor/XPathMain.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XQueryGrammarVisitor.java
+/Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/core/visitor/rewriterMain.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XQueryGrammarListener.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XqueryVisitor.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XPathGrammarBaseListener.java
-/Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XqueryStringJoin.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XPathGrammarVisitor.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/core/visitor/XQueryMain.java
-/Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XqueryString.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XpathVisitor.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XQueryGrammarBaseListener.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XQueryGrammarLexer.java
+/Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XqueryRewriter.java
 /Users/yujiazhang/Documents/GitHub/Database-system-implementation/src/main/java/project/parsers/XQueryGrammarBaseVisitor.java

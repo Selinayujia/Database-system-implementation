@@ -30,7 +30,7 @@ public class rewriterMain {
           // rewrite to string
           XqueryRewriter visitor = new XqueryRewriter();
           String rewriteOutput = visitor.visit(tree);
-          //rewriteOutput  = "<result>" + rewriteOutput + "</result>";
+          rewriteOutput  = "<result>" + rewriteOutput + "</result>";
           try {
               FileWriter writer = new FileWriter("newQuery.txt");
               //FileWriter writer = new FileWriter(args[1]);
